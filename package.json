@@ -1,0 +1,25 @@
+{
+  "name": "datagrok-apps",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:send": "npm run dev --workspace=apps/send",
+    "typecheck": "tsc --build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d postgres"
+  },
+  "devDependencies": {
+    "typescript": "^5.4",
+    "eslint": "^8.57",
+    "@typescript-eslint/eslint-plugin": "^7",
+    "@typescript-eslint/parser": "^7",
+    "prettier": "^3",
+    "prettier-plugin-tailwindcss": "^0.5"
+  }
+}

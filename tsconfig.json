@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/app-kit" },
+    { "path": "apps/send" }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@datagrok/app-kit": ["../../packages/app-kit/src"],
+      "@datagrok/app-kit/*": ["../../packages/app-kit/src/*"]
+    }
+  },
+  "include": ["client/src", "server", "shared"],
+  "references": [
+    { "path": "../../packages/app-kit" }
+  ]
+}
