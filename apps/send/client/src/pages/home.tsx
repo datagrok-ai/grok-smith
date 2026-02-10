@@ -120,7 +120,11 @@ export default function HomePage() {
               <tbody>
                 {studies.map((study) => (
                   <tr key={study.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium text-foreground">{study.studyId}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link to={`/study/${study.id}`} className="text-primary hover:underline">
+                        {study.studyId}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-foreground">{study.title}</td>
                     <td className="px-4 py-3">
                       <span

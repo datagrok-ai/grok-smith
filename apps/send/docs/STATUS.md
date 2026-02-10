@@ -13,9 +13,12 @@
 - [x] Drag-and-drop upload page — `/upload` route with dropzone UI and result display
 - [ ] Database migration (run after Docker Desktop is installed)
 - [x] API endpoint: `GET /api/studies` with subject counts
+- [x] API endpoint: `GET /api/studies/:id` with domain counts
+- [x] API endpoint: `GET /api/studies/:id/domains/:domain` — domain data rows
 - [ ] API endpoints (subjects, findings CRUD)
 - [x] UI page: study list with grid + upload link
-- [ ] UI pages (study detail, subject detail, findings viewer)
+- [x] UI page: study detail with domain tabs and data grid
+- [ ] UI pages (subject detail, findings viewer)
 
 ## Database Schema
 
@@ -40,8 +43,7 @@ Key design decision: All 16 findings domains share a unified `findings` table wi
 
 ## Next Up
 1. Install Docker Desktop and run initial migration + seed
-2. Build study detail page with domain counts
-3. Build subject detail page with findings by domain
+2. Build subject detail page with findings by domain
 
 ## Open Questions
 - How to handle SEND controlled terminology validation — bundle the CDISC codelist or fetch from API?
