@@ -1,0 +1,23 @@
+services:
+  ai-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${TTYD_PORT:-7681}:7681"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - REPO=${REPO:-your-org/grok-smith}
+      - BRANCH=${BRANCH:-}
+      - TASK=${TASK:-}
+      - GIT_USER_NAME=${GIT_USER_NAME:-AI Developer}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-ai-dev@datagrok.ai}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - REVIEWERS=${REVIEWERS:-}
+      - PR_LABELS=${PR_LABELS:-ai-generated}
+      - TTYD_PORT=7681
+    volumes:
+      # Mount host Claude auth for Max/Pro subscription (login persists across runs)
+      - ${CLAUDE_CONFIG_DIR:-~/.claude}:/home/dev/.claude
+    restart: "no"
