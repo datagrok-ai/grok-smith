@@ -31,5 +31,6 @@ console.log(`SEND server running on http://localhost:${String(port)}`)
 
 serve({
   fetch: app.fetch,
+  hostname: '0.0.0.0',
   port,
 })
