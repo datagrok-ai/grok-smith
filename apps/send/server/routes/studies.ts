@@ -118,6 +118,24 @@ studiesRoute.get('/studies/:id', async (c) => {
 })
 
 // ---------------------------------------------------------------------------
+// DELETE /studies/:id — delete a study and all associated data (cascades)
+// ---------------------------------------------------------------------------
+
+studiesRoute.delete('/studies/:id', async (c) => {
+  const studyUuid = c.req.param('id')
+
+  const [study] = await db.select({ id: studies.id }).from(studies).where(eq(studies.id, studyUuid))
+
+  if (!study) {
+    throw new HTTPException(404, { message: 'Study not found' })
+  }
+
+  await db.delete(studies).where(eq(studies.id, studyUuid))
+
+  return c.json({ success: true })
+})
+
+// ---------------------------------------------------------------------------
 // GET /studies/:id/domains/:domain — rows for a specific domain
 // ---------------------------------------------------------------------------
 
