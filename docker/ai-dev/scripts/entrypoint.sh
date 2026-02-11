@@ -47,6 +47,20 @@ if [ -n "$BRANCH" ]; then
   fi
 fi
 
+# ── Session context for Claude Code ──────────────────────────────────
+# Append session info so Claude knows the host URLs for testing
+HOST_APP_PORT="${HOST_APP_PORT:-5173}"
+HOST_API_PORT="${HOST_API_PORT:-3000}"
+cat >> "$REPO_DIR/CLAUDE.md" << EOF
+
+## Docker AI Dev Session
+You are running inside a Docker container. When starting dev servers:
+- The frontend is accessible at: http://localhost:${HOST_APP_PORT}
+- The API is accessible at: http://localhost:${HOST_API_PORT}
+- Always tell the user these URLs when you start a dev server.
+- Run \`submit-pr\` when the task is complete to create a PR.
+EOF
+
 # ── Install dependencies ────────────────────────────────────────────
 echo "Installing dependencies..."
 npm install
@@ -66,15 +80,8 @@ cd /home/dev/workspace
 echo "============================================"
 echo "  Grok-Smith AI Developer Session"
 echo "============================================"
-echo ""
 echo "  Branch: ${BRANCH:-main}"
 [ -n "${TASK:-}" ] && echo "  Task:   $TASK"
-echo ""
-echo "  Commands available:"
-echo "    claude          — start Claude Code"
-echo "    submit-pr       — run checks + create PR"
-echo "    notify-slack    — send Slack message"
-echo ""
 echo "============================================"
 echo ""
 
@@ -104,13 +111,25 @@ export TASK='$TASK'
 export SLACK_WEBHOOK_URL='$SLACK_WEBHOOK_URL'
 export REVIEWERS='$REVIEWERS'
 export PR_LABELS='$PR_LABELS'
+export HOST_APP_PORT='${HOST_APP_PORT}'
+export HOST_API_PORT='${HOST_API_PORT}'
 export PATH='/home/dev/.local/bin:$PATH'
 EOF
 chmod 600 "$ENV_FILE"
 
 # ── Launch ttyd with the session ─────────────────────────────────────
+HOST_TTYD_PORT="${HOST_TTYD_PORT:-7681}"
+HOST_APP_PORT="${HOST_APP_PORT:-5173}"
+HOST_API_PORT="${HOST_API_PORT:-3000}"
+
 echo ""
-echo "Web terminal available at http://localhost:${TTYD_PORT}"
+echo "============================================"
+echo "  Session ready!"
+echo "============================================"
+echo "  Terminal:  http://localhost:${HOST_TTYD_PORT}"
+echo "  Frontend:  http://localhost:${HOST_APP_PORT}"
+echo "  API:       http://localhost:${HOST_API_PORT}"
+echo "============================================"
 echo ""
 exec ttyd \
   --port "$TTYD_PORT" \

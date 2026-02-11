@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${TTYD_PORT:-7681}:7681"
+      - "${APP_PORT:-5173}:5173"       # Vite dev server
+      - "${API_PORT:-3000}:3000"       # API server
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
@@ -17,6 +19,9 @@ services:
       - REVIEWERS=${REVIEWERS:-}
       - PR_LABELS=${PR_LABELS:-ai-generated}
       - TTYD_PORT=7681
+      - HOST_TTYD_PORT=${TTYD_PORT:-7681}
+      - HOST_APP_PORT=${APP_PORT:-5173}
+      - HOST_API_PORT=${API_PORT:-3000}
     volumes:
       # Mount host Claude auth for Max/Pro subscription (login persists across runs)
       - ${CLAUDE_CONFIG_DIR:-~/.claude}:/home/dev/.claude
