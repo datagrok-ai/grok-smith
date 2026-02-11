@@ -10,7 +10,7 @@
       "@datagrok/app-kit/*": ["../../packages/app-kit/src/*"]
     }
   },
-  "include": ["client/src", "server", "shared"],
+  "include": ["client/src", "client/*.ts", "server", "shared"],
   "references": [
     { "path": "../../packages/app-kit" }
   ]
