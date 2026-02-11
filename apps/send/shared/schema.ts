@@ -64,7 +64,7 @@ export const trialSummaryParameters = sendSchema.table('trial_summary_parameters
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   seq: integer('seq').notNull(),
   groupId: varchar('group_id', { length: 50 }),
   parameterCode: varchar('parameter_code', { length: 20 }).notNull(),
@@ -88,7 +88,7 @@ export const trialArms = sendSchema.table(
     id: uuid('id').primaryKey().defaultRandom(),
     studyId: uuid('study_id')
       .notNull()
-      .references(() => studies.id),
+      .references(() => studies.id, { onDelete: 'cascade' }),
     armCode: varchar('arm_code', { length: 20 }).notNull(),
     arm: varchar('arm', { length: 200 }).notNull(),
     taetord: integer('taetord'),
@@ -118,7 +118,7 @@ export const trialSets = sendSchema.table(
     id: uuid('id').primaryKey().defaultRandom(),
     studyId: uuid('study_id')
       .notNull()
-      .references(() => studies.id),
+      .references(() => studies.id, { onDelete: 'cascade' }),
     setCode: varchar('set_code', { length: 20 }).notNull(),
     setDescription: varchar('set_description', { length: 200 }).notNull(),
     seq: integer('seq'),
@@ -147,7 +147,7 @@ export const subjects = sendSchema.table(
     id: uuid('id').primaryKey().defaultRandom(),
     studyId: uuid('study_id')
       .notNull()
-      .references(() => studies.id),
+      .references(() => studies.id, { onDelete: 'cascade' }),
     usubjid: varchar('usubjid', { length: 100 }).notNull(),
     subjid: varchar('subjid', { length: 50 }).notNull(),
     sex: varchar('sex', { length: 10 }).notNull(),
@@ -187,7 +187,7 @@ export const subjectElements = sendSchema.table('subject_elements', {
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id')
     .notNull()
     .references(() => subjects.id),
@@ -213,7 +213,7 @@ export const exposures = sendSchema.table('exposures', {
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id')
     .notNull()
     .references(() => subjects.id),
@@ -246,7 +246,7 @@ export const dispositions = sendSchema.table('dispositions', {
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id')
     .notNull()
     .references(() => subjects.id),
@@ -276,7 +276,7 @@ export const findings = sendSchema.table(
     id: uuid('id').primaryKey().defaultRandom(),
     studyId: uuid('study_id')
       .notNull()
-      .references(() => studies.id),
+      .references(() => studies.id, { onDelete: 'cascade' }),
     subjectId: uuid('subject_id').references(() => subjects.id),
     domain: varchar('domain', { length: 2 }).notNull(),
     seq: integer('seq').notNull(),
@@ -330,7 +330,7 @@ export const comments = sendSchema.table('comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id').references(() => subjects.id),
   relatedDomain: varchar('related_domain', { length: 2 }),
   seq: integer('seq').notNull(),
@@ -354,7 +354,7 @@ export const supplementalQualifiers = sendSchema.table('supplemental_qualifiers'
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id').references(() => subjects.id),
   relatedDomain: varchar('related_domain', { length: 2 }).notNull(),
   idVar: varchar('id_var', { length: 50 }),
@@ -380,7 +380,7 @@ export const relatedRecords = sendSchema.table('related_records', {
   id: uuid('id').primaryKey().defaultRandom(),
   studyId: uuid('study_id')
     .notNull()
-    .references(() => studies.id),
+    .references(() => studies.id, { onDelete: 'cascade' }),
   subjectId: uuid('subject_id').references(() => subjects.id),
   relatedDomain: varchar('related_domain', { length: 2 }).notNull(),
   idVar: varchar('id_var', { length: 50 }),
