@@ -57,16 +57,27 @@ HOST_API_PORT="${HOST_API_PORT:-3000}"
 cat >> "$REPO_DIR/CLAUDE.md" << EOF
 
 ## Docker AI Dev Session
-You are running inside a Docker container. When starting dev servers:
-- The frontend is accessible at: http://localhost:${HOST_APP_PORT}
-- The API is accessible at: http://localhost:${HOST_API_PORT}
-- Always tell the user these URLs when you start a dev server.
+You are running inside a Docker container. Dev servers are already running:
+- Frontend: http://localhost:${HOST_APP_PORT}
+- API:      http://localhost:${HOST_API_PORT}
+- Dev server logs: /tmp/dev-server.log
 - Run \`submit-pr\` when the task is complete to create a PR.
 EOF
 
 # ── Install dependencies ────────────────────────────────────────────
 echo "Installing dependencies..."
 npm install
+
+# ── Database setup ──────────────────────────────────────────────────
+echo "Running database migrations..."
+npm run db:migrate --workspace=apps/send
+
+echo "Seeding database..."
+npm run db:seed --workspace=apps/send || echo "Seeding skipped (may already be seeded)"
+
+# ── Start dev servers in background ─────────────────────────────────
+echo "Starting dev servers..."
+npm run dev:send > /tmp/dev-server.log 2>&1 &
 
 # ── Slack notification: session started ─────────────────────────────
 if [ -n "$SLACK_WEBHOOK_URL" ]; then
@@ -107,6 +118,7 @@ export PATH="/home/dev/.local/bin:$PATH"
 # ── Write env file for ttyd sessions (avoids leaking secrets in logs) ─
 ENV_FILE="/home/dev/.session-env"
 cat > "$ENV_FILE" << EOF
+export DATABASE_URL='${DATABASE_URL:-}'
 export ANTHROPIC_API_KEY='${ANTHROPIC_API_KEY:-}'
 export GITHUB_TOKEN='$GITHUB_TOKEN'
 export BRANCH='$BRANCH'

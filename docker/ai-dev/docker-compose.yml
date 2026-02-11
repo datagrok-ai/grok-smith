@@ -1,13 +1,31 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: send
+      POSTGRES_PASSWORD: send_local
+      POSTGRES_DB: send_dev
+    volumes:
+      - send_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U send -d send_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   ai-dev:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "${TTYD_PORT:-7681}:7681"
       - "${APP_PORT:-5173}:5173"       # Vite dev server
       - "${API_PORT:-3000}:3000"       # API server
     environment:
+      - DATABASE_URL=postgresql://send:send_local@postgres:5432/send_dev
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - REPO=${REPO:-your-org/grok-smith}
@@ -26,3 +44,6 @@ services:
       # Mount host Claude auth for Max/Pro subscription (login persists across runs)
       - ${CLAUDE_CONFIG_DIR:-~/.claude}:/home/dev/.claude
     restart: "no"
+
+volumes:
+  send_pgdata:
