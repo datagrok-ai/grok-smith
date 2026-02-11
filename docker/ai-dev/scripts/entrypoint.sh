@@ -15,6 +15,9 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ ! -d /home/dev/.claude ]; then
   exit 1
 fi
 
+# ── Ensure Claude Code skips onboarding (dark theme, already set up) ─
+echo '{"theme":"dark","hasCompletedOnboarding":true}' > /home/dev/.claude.json
+
 BRANCH="${BRANCH:-}"
 TASK="${TASK:-}"
 GIT_USER_NAME="${GIT_USER_NAME:-AI Developer}"
