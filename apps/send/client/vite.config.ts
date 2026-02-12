@@ -18,7 +18,7 @@ export default defineConfig({
     host: true, // bind to 0.0.0.0 so it's reachable from Docker host
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://127.0.0.1:3000',
         changeOrigin: true,
       },
     },
