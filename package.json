@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev:send": "npm run dev --workspace=apps/send",
+    "dev:grit": "npm run dev --workspace=apps/grit",
     "typecheck": "tsc --build",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
