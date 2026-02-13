@@ -6,6 +6,7 @@ Client-side UI library for grok-smith apps. Provides components, theme, hooks, a
 
 ### Components
 - `PageLayout` — Standard app shell with sidebar nav and header
+- `DataGrid` — AG Grid Community wrapper with Datagrok theme. Use `columnDefs` for explicit columns, `autoColumns` for dynamic data. Supports sorting, filtering, column resize, and virtual scrolling out of the box.
 
 ### Hooks
 - `useApi()` — Thin fetch wrapper: prefixes `/api`, sends `X-User-Id` header, returns typed JSON, throws `ApiRequestError` on failure

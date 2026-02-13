@@ -33,6 +33,7 @@ tools/
 - **Well-known UUIDs**: Import `SYSTEM_USER_ID`, `ADMIN_USER_ID` from `@datagrok/core-schema` — never define local copies.
 
 ## Always
+- Use `<DataGrid>` from `@datagrok/app-kit` for all tabular data (powered by AG Grid Community)
 - Use `@datagrok/app-kit` components, never raw HTML or direct Shadcn imports
 - Use `createApp()` from `@datagrok/server-kit` for server setup, never manual Hono boilerplate
 - Use `createDb()` from `@datagrok/server-kit` for DB connections

@@ -18,7 +18,8 @@
 - Save/Cancel buttons fixed at bottom of form
 
 ## Data Display
-- Use `<DataGrid>` from app-kit for any tabular data
+- Use `<DataGrid>` from app-kit for any tabular data (powered by AG Grid Community)
+- Use `<DataGrid autoColumns>` for dynamic/unknown schemas (e.g. SEND domain data)
 - Default sort: most recently created first
 - Always show created_at and created_by in list views
 - Empty states: icon + message + primary action button

@@ -11,7 +11,7 @@ import {
   Alert,
   AlertDescription,
   EmptyState,
-  DataTable,
+  DataGrid,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -25,7 +25,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@datagrok/app-kit'
-import type { BadgeVariant, ColumnDef } from '@datagrok/app-kit'
+import type { BadgeVariant, DataGridColumn } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
@@ -96,23 +96,25 @@ export default function HomePage() {
     }
   }, [deleteTarget, api])
 
-  const columns: ColumnDef<StudyRow>[] = [
+  const columns: DataGridColumn<StudyRow>[] = [
     {
-      key: 'actions',
-      header: '',
-      className: 'w-10 px-2',
-      cell: (study) => (
+      field: 'actions',
+      headerName: '',
+      width: 50,
+      sortable: false,
+      resizable: false,
+      cellRenderer: ({ data }: { data: StudyRow; value: unknown }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
-              ⋮
+              &#x22EE;
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={() => void navigate(`/study/${study.id}`)}>
+            <DropdownMenuItem onSelect={() => void navigate(`/study/${data.id}`)}>
               Open
             </DropdownMenuItem>
-            <DropdownMenuItem destructive onSelect={() => setDeleteTarget(study)}>
+            <DropdownMenuItem destructive onSelect={() => setDeleteTarget(data)}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -120,45 +122,48 @@ export default function HomePage() {
       ),
     },
     {
-      key: 'studyId',
-      header: 'Study ID',
-      cell: (study) => (
-        <Link to={`/study/${study.id}`} className="font-medium text-primary hover:underline">
-          {study.studyId}
+      field: 'studyId',
+      headerName: 'Study ID',
+      width: 140,
+      cellRenderer: ({ data }: { data: StudyRow; value: unknown }) => (
+        <Link to={`/study/${data.id}`} className="font-medium text-primary hover:underline">
+          {data.studyId}
         </Link>
       ),
     },
     {
-      key: 'title',
-      header: 'Title',
-      cell: (study) => study.title,
+      field: 'title',
+      headerName: 'Title',
+      flex: 1,
     },
     {
-      key: 'status',
-      header: 'Status',
-      cell: (study) => (
-        <Badge variant={study.status as BadgeVariant}>
-          {STATUS_LABELS[study.status]}
+      field: 'status',
+      headerName: 'Status',
+      width: 130,
+      cellRenderer: ({ data }: { data: StudyRow; value: unknown }) => (
+        <Badge variant={data.status as BadgeVariant}>
+          {STATUS_LABELS[data.status]}
         </Badge>
       ),
     },
     {
-      key: 'species',
-      header: 'Species',
-      className: 'text-muted-foreground',
-      cell: (study) => study.species ?? '\u2014',
+      field: 'species',
+      headerName: 'Species',
+      width: 120,
+      valueFormatter: ({ value }: { value: unknown }) => (value as string | null) ?? '\u2014',
     },
     {
-      key: 'subjects',
-      header: 'Subjects',
-      className: 'text-right tabular-nums',
-      cell: (study) => study.subjectCount,
+      field: 'subjectCount',
+      headerName: 'Subjects',
+      width: 100,
+      align: 'right',
     },
     {
-      key: 'created',
-      header: 'Created',
-      className: 'text-muted-foreground',
-      cell: (study) => new Date(study.createdAt).toLocaleDateString(),
+      field: 'createdAt',
+      headerName: 'Created',
+      width: 120,
+      valueFormatter: ({ value }: { value: unknown }) =>
+        new Date(value as string).toLocaleDateString(),
     },
   ]
 
@@ -206,10 +211,11 @@ export default function HomePage() {
         )}
 
         {!loading && !error && studies.length > 0 && (
-          <DataTable
-            columns={columns}
-            data={studies}
-            rowKey={(s) => s.id}
+          <DataGrid
+            rowData={studies}
+            columnDefs={columns}
+            getRowId={(s) => s.id}
+            height="auto"
           />
         )}
       </div>

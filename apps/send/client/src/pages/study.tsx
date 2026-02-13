@@ -9,6 +9,7 @@ import {
   Alert,
   AlertDescription,
   EmptyState,
+  DataGrid,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -143,14 +144,7 @@ export default function StudyPage() {
     void fetchDomainData()
   }, [activeDomain, id])
 
-  // Derive visible columns (exclude all-null columns)
   const activeRows = activeDomain ? domainCache[activeDomain] ?? [] : []
-  const columns =
-    activeRows.length > 0
-      ? Object.keys(activeRows[0]).filter((key) =>
-          activeRows.some((row) => row[key] != null && row[key] !== ''),
-        )
-      : []
 
   const study = studyResponse?.study
   const domains = studyResponse?.domains ?? []
@@ -250,39 +244,13 @@ export default function StudyPage() {
                   )}
 
                   {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length > 0 && (
-                    <div className="overflow-x-auto rounded-lg border border-border">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/50">
-                            {columns.map((col) => (
-                              <th
-                                key={col}
-                                className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
-                              >
-                                {formatColumnHeader(col)}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activeRows.map((row, i) => (
-                            <tr
-                              key={i}
-                              className="border-b border-border last:border-0 hover:bg-muted/30"
-                            >
-                              {columns.map((col) => (
-                                <td
-                                  key={col}
-                                  className="whitespace-nowrap px-3 py-1.5 text-foreground"
-                                >
-                                  {formatCellValue(row[col])}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <DataGrid
+                      rowData={activeRows}
+                      autoColumns
+                      formatHeader={formatColumnHeader}
+                      formatCell={formatCellValue}
+                      height="auto"
+                    />
                   )}
                 </TabsContent>
               ))}

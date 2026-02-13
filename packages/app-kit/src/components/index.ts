@@ -52,8 +52,8 @@ export {
   DropdownMenuSeparator,
 } from './ui/dropdown-menu'
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
-export { DataTable } from './ui/data-table'
-export type { DataTableProps, ColumnDef } from './ui/data-table'
+export { DataGrid } from './ui/data-grid'
+export type { DataGridProps, DataGridColumn } from './ui/data-grid'
 
 // Form components
 export { Label } from './ui/label'

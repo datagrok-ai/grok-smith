@@ -1,0 +1,28 @@
+.ag-theme-datagrok {
+  /* Header */
+  --ag-header-background-color: var(--color-muted);
+  --ag-header-foreground-color: var(--color-muted-foreground);
+  --ag-header-cell-hover-background-color: var(--color-neutral-200);
+
+  /* Rows */
+  --ag-background-color: var(--color-background);
+  --ag-row-hover-color: var(--color-neutral-50);
+  --ag-selected-row-background-color: var(--color-primary-light);
+  --ag-odd-row-background-color: var(--color-background);
+
+  /* Font */
+  --ag-font-family: var(--font-sans);
+  --ag-font-size: var(--text-sm);
+
+  /* Borders */
+  --ag-border-color: var(--color-border);
+  --ag-row-border-color: var(--color-border);
+  --ag-wrapper-border-radius: var(--radius-lg);
+
+  /* Cell padding */
+  --ag-cell-horizontal-padding: 16px;
+
+  /* Focus */
+  --ag-range-selection-border-color: var(--color-primary);
+  --ag-input-focus-border-color: var(--color-ring);
+}

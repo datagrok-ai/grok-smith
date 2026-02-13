@@ -9,7 +9,7 @@ import {
   Alert,
   AlertDescription,
   EmptyState,
-  DataTable,
+  DataGrid,
   Input,
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@datagrok/app-kit'
-import type { ColumnDef } from '@datagrok/app-kit'
+import type { DataGridColumn } from '@datagrok/app-kit'
 
 import { nav } from '../nav'
 
@@ -128,12 +128,14 @@ export default function ProjectsPage() {
     }
   }
 
-  const columns: ColumnDef<ProjectRow>[] = [
+  const columns: DataGridColumn<ProjectRow>[] = [
     {
-      key: 'actions',
-      header: '',
-      className: 'w-10 px-2',
-      cell: (project) => (
+      field: 'actions',
+      headerName: '',
+      width: 50,
+      sortable: false,
+      resizable: false,
+      cellRenderer: ({ data }: { data: ProjectRow; value: unknown }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
@@ -141,7 +143,7 @@ export default function ProjectsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem destructive onSelect={() => setDeleteTarget(project)}>
+            <DropdownMenuItem destructive onSelect={() => setDeleteTarget(data)}>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -149,33 +151,34 @@ export default function ProjectsPage() {
       ),
     },
     {
-      key: 'key',
-      header: 'Key',
-      className: 'font-mono font-bold',
-      cell: (p) => p.key,
+      field: 'key',
+      headerName: 'Key',
+      width: 100,
+      cellClass: 'font-mono font-bold',
     },
     {
-      key: 'name',
-      header: 'Name',
-      cell: (p) => p.name,
+      field: 'name',
+      headerName: 'Name',
+      flex: 1,
     },
     {
-      key: 'description',
-      header: 'Description',
-      className: 'text-muted-foreground',
-      cell: (p) => p.description ?? '\u2014',
+      field: 'description',
+      headerName: 'Description',
+      flex: 1,
+      valueFormatter: ({ value }: { value: unknown }) => (value as string | null) ?? '\u2014',
     },
     {
-      key: 'issues',
-      header: 'Issues',
-      className: 'text-right tabular-nums',
-      cell: (p) => p.issueCount,
+      field: 'issueCount',
+      headerName: 'Issues',
+      width: 100,
+      align: 'right',
     },
     {
-      key: 'created',
-      header: 'Created',
-      className: 'text-muted-foreground',
-      cell: (p) => new Date(p.createdAt).toLocaleDateString(),
+      field: 'createdAt',
+      headerName: 'Created',
+      width: 120,
+      valueFormatter: ({ value }: { value: unknown }) =>
+        new Date(value as string).toLocaleDateString(),
     },
   ]
 
@@ -220,7 +223,12 @@ export default function ProjectsPage() {
         )}
 
         {!loading && !error && projects.length > 0 && (
-          <DataTable columns={columns} data={projects} rowKey={(p) => p.id} />
+          <DataGrid
+            rowData={projects}
+            columnDefs={columns}
+            getRowId={(p) => p.id}
+            height="auto"
+          />
         )}
       </div>
 

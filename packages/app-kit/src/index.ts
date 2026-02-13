@@ -55,8 +55,8 @@ export {
   TabsList,
   TabsTrigger,
   TabsContent,
-  // DataTable
-  DataTable,
+  // DataGrid
+  DataGrid,
   // Form
   Label,
   Input,
@@ -79,8 +79,8 @@ export type {
   SpinnerProps,
   AlertProps,
   EmptyStateProps,
-  DataTableProps,
-  ColumnDef,
+  DataGridProps,
+  DataGridColumn,
   LabelProps,
   InputProps,
   TextareaProps,

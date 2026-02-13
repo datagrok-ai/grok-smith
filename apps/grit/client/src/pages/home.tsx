@@ -10,7 +10,7 @@ import {
   Alert,
   AlertDescription,
   EmptyState,
-  DataTable,
+  DataGrid,
   Input,
   Select,
   SelectTrigger,
@@ -25,7 +25,7 @@ import {
   Textarea,
   FormField,
 } from '@datagrok/app-kit'
-import type { ColumnDef, BadgeVariant } from '@datagrok/app-kit'
+import type { DataGridColumn, BadgeVariant } from '@datagrok/app-kit'
 
 import type { IssueType, IssuePriority, IssueStatus } from '../../../shared/constants'
 import {
@@ -392,11 +392,38 @@ export default function HomePage() {
   // -------------------------------------------------------------------------
 
   async function updateIssue(issueId: string, patch: Record<string, unknown>) {
+    // Optimistic update — apply locally first to avoid flicker
+    setIssues((prev) =>
+      prev.map((issue) => {
+        if (issue.id !== issueId) return issue
+        const updated = { ...issue, ...patch } as IssueRow
+        // If assignee changed, resolve the display name
+        if ('assigneeId' in patch) {
+          const user = users.find((u) => u.id === patch.assigneeId)
+          updated.assigneeName = user?.displayName ?? null
+        }
+        return updated
+      }),
+    )
+    // Also update the context panel if this issue is selected
+    setSelectedItem((prev) => {
+      if (prev?.type === 'issue' && prev.data.id === issueId) {
+        const updated = { ...prev.data, ...patch } as IssueRow
+        if ('assigneeId' in patch) {
+          const user = users.find((u) => u.id === patch.assigneeId)
+          updated.assigneeName = user?.displayName ?? null
+        }
+        return { type: 'issue', data: updated }
+      }
+      return prev
+    })
+
     try {
       await apiRef.current.put<unknown>(`/issues/${issueId}`, patch)
-      void fetchIssues(search, projectFilter)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update issue')
+      // Revert on failure
+      void fetchIssues(search, projectFilter)
     }
   }
 
@@ -455,102 +482,109 @@ export default function HomePage() {
   // Columns
   // -------------------------------------------------------------------------
 
-  const columns: ColumnDef<IssueRow>[] = [
+  const columns: DataGridColumn<IssueRow>[] = [
     {
-      key: 'type',
-      header: 'Type',
-      className: 'w-16',
-      cell: (row) => (
+      field: 'type',
+      headerName: 'Type',
+      width: 70,
+      sortable: false,
+      cellRenderer: ({ data }: { data: IssueRow; value: unknown }) => (
         <span
           className="inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-primary-foreground"
           style={{
-            backgroundColor: row.type === 'bug' ? 'var(--color-destructive)' : row.type === 'feature' ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
+            backgroundColor: data.type === 'bug' ? 'var(--color-destructive)' : data.type === 'feature' ? 'var(--color-primary)' : 'var(--color-muted-foreground)',
           }}
-          title={ISSUE_TYPE_LABELS[row.type]}
+          title={ISSUE_TYPE_LABELS[data.type]}
         >
-          {TYPE_ICONS[row.type]}
+          {TYPE_ICONS[data.type]}
         </span>
       ),
     },
     {
-      key: 'key',
-      header: 'Key',
-      className: 'w-24 font-mono text-xs text-muted-foreground',
-      cell: (row) => row.projectKey,
+      field: 'projectKey',
+      headerName: 'Key',
+      width: 100,
+      cellClass: 'font-mono text-xs text-muted-foreground',
     },
     {
-      key: 'name',
-      header: 'Name',
-      cell: (row) => <span className="font-medium">{row.name}</span>,
+      field: 'name',
+      headerName: 'Name',
+      flex: 1,
+      cellRenderer: ({ data }: { data: IssueRow; value: unknown }) => (
+        <span className="font-medium">{data.name}</span>
+      ),
     },
     {
-      key: 'priority',
-      header: 'Priority',
-      className: 'w-24',
-      cell: (row) => (
-        <Badge variant={PRIORITY_VARIANTS[row.priority]}>
-          {ISSUE_PRIORITY_LABELS[row.priority]}
+      field: 'priority',
+      headerName: 'Priority',
+      width: 100,
+      cellRenderer: ({ data }: { data: IssueRow; value: unknown }) => (
+        <Badge variant={PRIORITY_VARIANTS[data.priority]}>
+          {ISSUE_PRIORITY_LABELS[data.priority]}
         </Badge>
       ),
     },
     {
-      key: 'status',
-      header: 'Status',
-      className: 'w-40',
-      cell: (row) => (
-        <Select
-          value={row.status}
-          onValueChange={(value) => void updateIssue(row.id, { status: value })}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ISSUE_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {ISSUE_STATUS_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      field: 'status',
+      headerName: 'Status',
+      width: 160,
+      cellRenderer: ({ data }: { data: IssueRow; value: unknown }) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Select
+            value={data.status}
+            onValueChange={(value) => void updateIssue(data.id, { status: value })}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ISSUE_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {ISSUE_STATUS_LABELS[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       ),
     },
     {
-      key: 'assignee',
-      header: 'Assignee',
-      className: 'w-44',
-      cell: (row) => (
-        <Select
-          value={row.assigneeId ?? 'unassigned'}
-          onValueChange={(value) =>
-            void updateIssue(row.id, { assigneeId: value === 'unassigned' ? null : value })
-          }
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="unassigned">Unassigned</SelectItem>
-            {users.map((u) => (
-              <SelectItem key={u.id} value={u.id}>
-                {u.displayName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      field: 'assigneeId',
+      headerName: 'Assignee',
+      width: 176,
+      cellRenderer: ({ data }: { data: IssueRow; value: unknown }) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Select
+            value={data.assigneeId ?? 'unassigned'}
+            onValueChange={(value) =>
+              void updateIssue(data.id, { assigneeId: value === 'unassigned' ? null : value })
+            }
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.displayName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       ),
     },
     {
-      key: 'reporter',
-      header: 'Reporter',
-      className: 'text-muted-foreground',
-      cell: (row) => row.reporterName,
+      field: 'reporterName',
+      headerName: 'Reporter',
     },
     {
-      key: 'created',
-      header: 'Created',
-      className: 'text-muted-foreground',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      field: 'createdAt',
+      headerName: 'Created',
+      width: 120,
+      valueFormatter: ({ value }: { value: unknown }) =>
+        new Date(value as string).toLocaleDateString(),
     },
   ]
 
@@ -642,11 +676,12 @@ export default function HomePage() {
 
               {/* Data table */}
               {!loading && !error && issues.length > 0 && (
-                <DataTable
-                  columns={columns}
-                  data={issues}
-                  rowKey={(r) => r.id}
-                  onRowClick={handleRowClick}
+                <DataGrid
+                  rowData={issues}
+                  columnDefs={columns}
+                  getRowId={(r) => r.id}
+                  onRowClicked={handleRowClick}
+                  height="auto"
                 />
               )}
             </div>
