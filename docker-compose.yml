@@ -4,16 +4,17 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: send
-      POSTGRES_PASSWORD: send_local
-      POSTGRES_DB: send_dev
+      POSTGRES_USER: datagrok
+      POSTGRES_PASSWORD: datagrok_local
+      POSTGRES_DB: datagrok_dev
     volumes:
-      - send_pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./packages/core-schema/sql/:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U send -d send_dev"]
+      test: ["CMD-SHELL", "pg_isready -U datagrok -d datagrok_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
-  send_pgdata:
+  pgdata:

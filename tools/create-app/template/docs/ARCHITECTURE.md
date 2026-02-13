@@ -15,3 +15,5 @@
 ## Integration Points
 - Datagrok: embedded as panel
 - app-kit: provides PageLayout, DataGrid, theme, auth context
+- server-kit: provides createApp(), createDb(), standard middleware and routes
+- core-schema: provides auditColumns(), shared Drizzle types for core tables

@@ -1,17 +1,14 @@
-import { pgSchema, uuid, timestamp } from 'drizzle-orm/pg-core'
+import { pgSchema } from 'drizzle-orm/pg-core'
+
+export { auditColumns } from '@datagrok/core-schema'
 
 export const appSchema = pgSchema('{{APP_NAME}}')
 
-/**
- * Helper: base columns included in every table.
- * Copy these into each table definition.
- */
-export const baseColumns = {
-  id: uuid('id').primaryKey().defaultRandom(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
-}
+// Define your tables here using appSchema.table() and auditColumns():
+//
+// import { varchar } from 'drizzle-orm/pg-core'
+//
+// export const myTable = appSchema.table('my_table', {
+//   ...auditColumns(),
+//   name: varchar('name', { length: 200 }).notNull(),
+// })

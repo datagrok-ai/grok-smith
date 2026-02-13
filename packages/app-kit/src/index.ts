@@ -7,10 +7,10 @@ export { DatagrokProvider, useDatagrok, createDatagrokAdapter } from './adapter'
 export type { DatagrokContext, DatagrokUser } from './adapter'
 
 // Mock
-export { createMockAdapter, mockUsers } from './mock'
+export { createMockAdapter, mockUsers, ADMIN_USER_ID, SYSTEM_USER_ID } from './mock'
 
 // Hooks
-export { useApi, ApiRequestError } from './hooks'
+export { useApi, ApiRequestError, useCurrentUser } from './hooks'
 export type { ApiError } from './hooks'
 
 // Domain

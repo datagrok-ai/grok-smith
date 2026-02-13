@@ -12,7 +12,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { importStudyFromDirectory } from '../server/services/import-study'
-import { SYSTEM_USER_ID } from '../shared/schema'
+import { SYSTEM_USER_ID } from '@datagrok/core-schema'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = path.resolve(__dirname, '../data/PointCross')

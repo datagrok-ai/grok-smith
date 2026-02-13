@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { PageLayout, useApi } from '@datagrok/app-kit'
+import { PageLayout, useApi, ApiRequestError } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
@@ -52,7 +52,11 @@ export default function HomePage() {
       const data = await api.get<StudyRow[]>('/studies')
       setStudies(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load studies')
+      if (err instanceof ApiRequestError) {
+        setError(`${String(err.status)}: ${err.body.error}`)
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load studies')
+      }
     } finally {
       setLoading(false)
     }

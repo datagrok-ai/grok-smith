@@ -2,13 +2,14 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: send
-      POSTGRES_PASSWORD: send_local
-      POSTGRES_DB: send_dev
+      POSTGRES_USER: datagrok
+      POSTGRES_PASSWORD: datagrok_local
+      POSTGRES_DB: datagrok_dev
     volumes:
-      - send_pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/core-schema/sql/:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U send -d send_dev"]
+      test: ["CMD-SHELL", "pg_isready -U datagrok -d datagrok_dev"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -25,7 +26,7 @@ services:
       - "${APP_PORT:-5173}:5173"       # Vite dev server
       - "${API_PORT:-3000}:3000"       # API server
     environment:
-      - DATABASE_URL=postgresql://send:send_local@postgres:5432/send_dev
+      - DATABASE_URL=postgresql://datagrok:datagrok_local@postgres:5432/datagrok_dev
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - REPO=${REPO:-your-org/grok-smith}
@@ -46,4 +47,4 @@ services:
     restart: "no"
 
 volumes:
-  send_pgdata:
+  pgdata:

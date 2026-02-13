@@ -4,29 +4,28 @@ import {
   varchar,
   text,
   timestamp,
-  pgEnum,
   integer,
   doublePrecision,
   jsonb,
   index,
   unique,
 } from 'drizzle-orm/pg-core'
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { createInsertSchema, createSelectSchema } from 'drizzle-orm/zod'
+import type { InferInsertModel, InferSelectModel } from 'drizzle-orm'
+import { z } from 'zod'
 
-import type { z } from 'zod'
+import { entities, users } from '@datagrok/core-schema'
 
 import { STUDY_STATUS } from './constants'
 
 // ---------------------------------------------------------------------------
-// Schema & Enums
+// Schema
 // ---------------------------------------------------------------------------
 
 export const sendSchema = pgSchema('send')
 
-export const studyStatusEnum = pgEnum('study_status', STUDY_STATUS)
-
-/** System user UUID used for seed data and automated imports */
-export const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000'
+/** Zod schema for validating study status values */
+export const studyStatusSchema = z.enum(STUDY_STATUS)
 
 // ---------------------------------------------------------------------------
 // studies — one row per nonclinical study (source: TS domain metadata)
@@ -34,10 +33,11 @@ export const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000'
 
 export const studies = sendSchema.table('studies', {
   id: uuid('id').primaryKey().defaultRandom(),
+  entityId: uuid('entity_id').references(() => entities.id),
   studyId: varchar('study_id', { length: 100 }).notNull().unique(),
   title: varchar('title', { length: 500 }).notNull(),
   description: text('description'),
-  status: studyStatusEnum('status').notNull().default('draft'),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
   sponsor: varchar('sponsor', { length: 200 }),
   studyDirector: varchar('study_director', { length: 200 }),
   startDate: timestamp('start_date', { withTimezone: true }),
@@ -53,7 +53,7 @@ export const studies = sendSchema.table('studies', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ export const trialSummaryParameters = sendSchema.table('trial_summary_parameters
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -101,11 +101,11 @@ export const trialArms = sendSchema.table(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
   },
-  (table) => ({
-    uqTrialArmsStudyArm: unique('uq_trial_arms_study_arm').on(table.studyId, table.armCode, table.taetord),
-  }),
+  (table) => [
+    unique('uq_trial_arms_study_arm').on(table.studyId, table.armCode, table.taetord),
+  ],
 )
 
 // ---------------------------------------------------------------------------
@@ -130,11 +130,11 @@ export const trialSets = sendSchema.table(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
   },
-  (table) => ({
-    uqTrialSetsStudySetSeq: unique('uq_trial_sets_study_set_seq').on(table.studyId, table.setCode, table.seq),
-  }),
+  (table) => [
+    unique('uq_trial_sets_study_set_seq').on(table.studyId, table.setCode, table.seq),
+  ],
 )
 
 // ---------------------------------------------------------------------------
@@ -171,12 +171,12 @@ export const subjects = sendSchema.table(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
   },
-  (table) => ({
-    uqSubjectsStudyUsubjid: unique('uq_subjects_study_usubjid').on(table.studyId, table.usubjid),
-    idxSubjectsStudyId: index('idx_subjects_study_id').on(table.studyId),
-  }),
+  (table) => [
+    unique('uq_subjects_study_usubjid').on(table.studyId, table.usubjid),
+    index('idx_subjects_study_id').on(table.studyId),
+  ],
 )
 
 // ---------------------------------------------------------------------------
@@ -202,7 +202,7 @@ export const subjectElements = sendSchema.table('subject_elements', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ export const exposures = sendSchema.table('exposures', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -262,7 +262,7 @@ export const dispositions = sendSchema.table('dispositions', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -312,14 +312,14 @@ export const findings = sendSchema.table(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    createdBy: uuid('created_by').notNull(),
+    createdBy: uuid('created_by').notNull().references(() => users.id),
   },
-  (table) => ({
-    idxFindingsStudyDomain: index('idx_findings_study_domain').on(table.studyId, table.domain),
-    idxFindingsSubject: index('idx_findings_subject').on(table.subjectId),
-    idxFindingsDomainTest: index('idx_findings_domain_test').on(table.domain, table.testCode),
-    idxFindingsStudySubjectDomain: index('idx_findings_study_subject_domain').on(table.studyId, table.subjectId, table.domain),
-  }),
+  (table) => [
+    index('idx_findings_study_domain').on(table.studyId, table.domain),
+    index('idx_findings_subject').on(table.subjectId),
+    index('idx_findings_domain_test').on(table.domain, table.testCode),
+    index('idx_findings_study_subject_domain').on(table.studyId, table.subjectId, table.domain),
+  ],
 )
 
 // ---------------------------------------------------------------------------
@@ -343,7 +343,7 @@ export const comments = sendSchema.table('comments', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -369,7 +369,7 @@ export const supplementalQualifiers = sendSchema.table('supplemental_qualifiers'
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -392,7 +392,7 @@ export const relatedRecords = sendSchema.table('related_records', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
 })
 
 // ---------------------------------------------------------------------------
@@ -402,71 +402,71 @@ export const relatedRecords = sendSchema.table('related_records', {
 // Studies
 export const insertStudySchema = createInsertSchema(studies)
 export const selectStudySchema = createSelectSchema(studies)
-export type InsertStudy = z.infer<typeof insertStudySchema>
-export type Study = z.infer<typeof selectStudySchema>
+export type InsertStudy = InferInsertModel<typeof studies>
+export type Study = InferSelectModel<typeof studies>
 
 // Trial Summary Parameters
 export const insertTrialSummaryParameterSchema = createInsertSchema(trialSummaryParameters)
 export const selectTrialSummaryParameterSchema = createSelectSchema(trialSummaryParameters)
-export type InsertTrialSummaryParameter = z.infer<typeof insertTrialSummaryParameterSchema>
-export type TrialSummaryParameter = z.infer<typeof selectTrialSummaryParameterSchema>
+export type InsertTrialSummaryParameter = InferInsertModel<typeof trialSummaryParameters>
+export type TrialSummaryParameter = InferSelectModel<typeof trialSummaryParameters>
 
 // Trial Arms
 export const insertTrialArmSchema = createInsertSchema(trialArms)
 export const selectTrialArmSchema = createSelectSchema(trialArms)
-export type InsertTrialArm = z.infer<typeof insertTrialArmSchema>
-export type TrialArm = z.infer<typeof selectTrialArmSchema>
+export type InsertTrialArm = InferInsertModel<typeof trialArms>
+export type TrialArm = InferSelectModel<typeof trialArms>
 
 // Trial Sets
 export const insertTrialSetSchema = createInsertSchema(trialSets)
 export const selectTrialSetSchema = createSelectSchema(trialSets)
-export type InsertTrialSet = z.infer<typeof insertTrialSetSchema>
-export type TrialSet = z.infer<typeof selectTrialSetSchema>
+export type InsertTrialSet = InferInsertModel<typeof trialSets>
+export type TrialSet = InferSelectModel<typeof trialSets>
 
 // Subjects
 export const insertSubjectSchema = createInsertSchema(subjects)
 export const selectSubjectSchema = createSelectSchema(subjects)
-export type InsertSubject = z.infer<typeof insertSubjectSchema>
-export type Subject = z.infer<typeof selectSubjectSchema>
+export type InsertSubject = InferInsertModel<typeof subjects>
+export type Subject = InferSelectModel<typeof subjects>
 
 // Subject Elements
 export const insertSubjectElementSchema = createInsertSchema(subjectElements)
 export const selectSubjectElementSchema = createSelectSchema(subjectElements)
-export type InsertSubjectElement = z.infer<typeof insertSubjectElementSchema>
-export type SubjectElement = z.infer<typeof selectSubjectElementSchema>
+export type InsertSubjectElement = InferInsertModel<typeof subjectElements>
+export type SubjectElement = InferSelectModel<typeof subjectElements>
 
 // Exposures
 export const insertExposureSchema = createInsertSchema(exposures)
 export const selectExposureSchema = createSelectSchema(exposures)
-export type InsertExposure = z.infer<typeof insertExposureSchema>
-export type Exposure = z.infer<typeof selectExposureSchema>
+export type InsertExposure = InferInsertModel<typeof exposures>
+export type Exposure = InferSelectModel<typeof exposures>
 
 // Dispositions
 export const insertDispositionSchema = createInsertSchema(dispositions)
 export const selectDispositionSchema = createSelectSchema(dispositions)
-export type InsertDisposition = z.infer<typeof insertDispositionSchema>
-export type Disposition = z.infer<typeof selectDispositionSchema>
+export type InsertDisposition = InferInsertModel<typeof dispositions>
+export type Disposition = InferSelectModel<typeof dispositions>
 
 // Findings
 export const insertFindingSchema = createInsertSchema(findings)
 export const selectFindingSchema = createSelectSchema(findings)
-export type InsertFinding = z.infer<typeof insertFindingSchema>
-export type Finding = z.infer<typeof selectFindingSchema>
+export type InsertFinding = InferInsertModel<typeof findings>
+export type Finding = InferSelectModel<typeof findings>
 
 // Comments
 export const insertCommentSchema = createInsertSchema(comments)
 export const selectCommentSchema = createSelectSchema(comments)
-export type InsertComment = z.infer<typeof insertCommentSchema>
-export type Comment = z.infer<typeof selectCommentSchema>
+export type InsertComment = InferInsertModel<typeof comments>
+export type Comment = InferSelectModel<typeof comments>
 
 // Supplemental Qualifiers
 export const insertSupplementalQualifierSchema = createInsertSchema(supplementalQualifiers)
 export const selectSupplementalQualifierSchema = createSelectSchema(supplementalQualifiers)
-export type InsertSupplementalQualifier = z.infer<typeof insertSupplementalQualifierSchema>
-export type SupplementalQualifier = z.infer<typeof selectSupplementalQualifierSchema>
+export type InsertSupplementalQualifier = InferInsertModel<typeof supplementalQualifiers>
+export type SupplementalQualifier = InferSelectModel<typeof supplementalQualifiers>
 
 // Related Records
 export const insertRelatedRecordSchema = createInsertSchema(relatedRecords)
 export const selectRelatedRecordSchema = createSelectSchema(relatedRecords)
-export type InsertRelatedRecord = z.infer<typeof insertRelatedRecordSchema>
-export type RelatedRecord = z.infer<typeof selectRelatedRecordSchema>
+export type InsertRelatedRecord = InferInsertModel<typeof relatedRecords>
+export type RelatedRecord = InferSelectModel<typeof relatedRecords>

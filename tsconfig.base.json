@@ -20,7 +20,11 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@datagrok/app-kit": ["./packages/app-kit/src"],
-      "@datagrok/app-kit/*": ["./packages/app-kit/src/*"]
+      "@datagrok/app-kit/*": ["./packages/app-kit/src/*"],
+      "@datagrok/core-schema": ["./packages/core-schema/src"],
+      "@datagrok/core-schema/*": ["./packages/core-schema/src/*"],
+      "@datagrok/server-kit": ["./packages/server-kit/src"],
+      "@datagrok/server-kit/*": ["./packages/server-kit/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", "coverage"]

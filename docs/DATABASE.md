@@ -8,11 +8,20 @@
 - Foreign keys: `{referenced_table_singular}_id` (`project_id`, `user_id`)
 - Never abbreviate (`organizations` not `orgs`)
 
-## Required Columns (every table)
+## Required Columns
+
+Every table gets:
 - `id` — UUID, primary key, default `gen_random_uuid()`
+
+**Entity tables** (top-level things users create/own — studies, compounds, projects) also get:
+- `entity_id` — UUID, FK to `entities.id` (links to the Datagrok privilege system)
 - `created_at` — timestamptz, default `now()`
 - `updated_at` — timestamptz, managed by Drizzle `.$onUpdate()`
-- `created_by` — UUID, FK to `datagrok_users.id`
+- `created_by` — UUID, FK to `users.id`
+
+Use `auditColumns()` from `@datagrok/core-schema` to add all five at once.
+
+**Detail/child tables** (rows that belong to and cascade-delete with a parent entity — findings, trial_arms, exposures) only need `id`. The parent entity tracks ownership. Add timestamps if independently useful, but `created_by` is redundant.
 
 ## Datagrok Integration
 - Reference Datagrok users via a local `datagrok_users` table that syncs id, login, and display_name

@@ -5,6 +5,6 @@ export default defineConfig({
   out: './server/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env['DATABASE_URL'] ?? 'postgresql://send:send_local@localhost:5433/send_dev',
+    url: process.env['DATABASE_URL'] ?? 'postgresql://datagrok:datagrok_local@localhost:5433/datagrok_dev',
   },
 })
