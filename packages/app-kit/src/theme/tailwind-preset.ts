@@ -36,7 +36,32 @@ const preset: Partial<Config> = {
           foreground: 'var(--color-muted-foreground)',
         },
         border: 'var(--color-border)',
-        destructive: 'var(--color-destructive)',
+        destructive: {
+          DEFAULT: 'var(--color-destructive)',
+          foreground: 'var(--color-destructive-foreground)',
+        },
+        popover: {
+          DEFAULT: 'var(--color-popover)',
+          foreground: 'var(--color-popover-foreground)',
+        },
+        accent: {
+          DEFAULT: 'var(--color-accent)',
+          foreground: 'var(--color-accent-foreground)',
+        },
+        ring: 'var(--color-ring)',
+        input: 'var(--color-input)',
+        success: {
+          DEFAULT: 'var(--color-success)',
+          foreground: 'var(--color-success-foreground)',
+        },
+        warning: {
+          DEFAULT: 'var(--color-warning)',
+          foreground: 'var(--color-warning-foreground)',
+        },
+        info: {
+          DEFAULT: 'var(--color-info)',
+          foreground: 'var(--color-info-foreground)',
+        },
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 
-import { PageLayout, useApi } from '@datagrok/app-kit'
+import {
+  PageLayout,
+  useApi,
+  Badge,
+  Skeleton,
+  Alert,
+  AlertDescription,
+  EmptyState,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@datagrok/app-kit'
+import type { BadgeVariant } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
@@ -56,13 +69,6 @@ function formatCellValue(value: unknown): string {
     return new Date(value).toLocaleDateString()
   }
   return String(value)
-}
-
-const STATUS_STYLES: Record<StudyStatus, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  archived: 'bg-muted text-muted-foreground',
 }
 
 const STATUS_LABELS: Record<StudyStatus, string> = {
@@ -153,19 +159,19 @@ export default function StudyPage() {
     <PageLayout title={study ? `Study: ${study.studyId}` : 'Study'} nav={nav}>
       {loading && (
         <div className="space-y-4">
-          <div className="h-24 animate-pulse rounded-lg bg-muted" />
-          <div className="h-10 animate-pulse rounded-lg bg-muted" />
-          <div className="h-64 animate-pulse rounded-lg bg-muted" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-10" />
+          <Skeleton className="h-64" />
         </div>
       )}
 
       {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-sm text-destructive">{error}</p>
+        <Alert variant="destructive" className="text-center">
+          <AlertDescription>{error}</AlertDescription>
           <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
             Back to Studies
           </Link>
-        </div>
+        </Alert>
       )}
 
       {!loading && !error && study && (
@@ -175,11 +181,9 @@ export default function StudyPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-semibold text-foreground">{study.title}</h2>
-                <span
-                  className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[study.status]}`}
-                >
+                <Badge variant={study.status as BadgeVariant}>
                   {STATUS_LABELS[study.status]}
-                </span>
+                </Badge>
               </div>
               <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
                 <span>ID: <span className="font-medium text-foreground">{study.studyId}</span></span>
@@ -197,108 +201,96 @@ export default function StudyPage() {
             </Link>
           </div>
 
-          {/* Domain tabs */}
+          {/* Domain tabs + data */}
           {domains.length > 0 && (
-            <div className="overflow-x-auto border-b border-border">
-              <div className="flex gap-0">
+            <Tabs
+              value={activeDomain ?? undefined}
+              onValueChange={setActiveDomain}
+            >
+              <TabsList>
                 {domains.map((d) => (
-                  <button
-                    key={d.domain}
-                    type="button"
-                    title={`${d.label} (${String(d.count)} rows)`}
-                    className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                      activeDomain === d.domain
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground'
-                    }`}
-                    onClick={() => setActiveDomain(d.domain)}
-                  >
+                  <TabsTrigger key={d.domain} value={d.domain} title={`${d.label} (${String(d.count)} rows)`}>
                     {d.domain}
-                    <span className="ml-1 text-xs text-muted-foreground">
-                      {d.count}
-                    </span>
-                  </button>
+                    <span className="ml-1 text-xs text-muted-foreground">{d.count}</span>
+                  </TabsTrigger>
                 ))}
-              </div>
-            </div>
-          )}
+              </TabsList>
 
-          {/* Domain data table */}
-          {domainLoading && (
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 animate-pulse rounded bg-muted" />
-              ))}
-            </div>
-          )}
-
-          {domainError && (
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-              <p className="text-sm text-destructive">{domainError}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeDomain) {
-                    setDomainCache((prev) => {
-                      const next = { ...prev }
-                      delete next[activeDomain]
-                      return next
-                    })
-                  }
-                }}
-                className="mt-3 text-sm font-medium text-primary hover:underline"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {!domainLoading && !domainError && activeRows.length === 0 && activeDomain && (
-            <div className="rounded-lg border border-border p-8 text-center">
-              <p className="text-sm text-muted-foreground">No data for {activeDomain}</p>
-            </div>
-          )}
-
-          {!domainLoading && !domainError && activeRows.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    {columns.map((col) => (
-                      <th
-                        key={col}
-                        className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
-                      >
-                        {formatColumnHeader(col)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeRows.map((row, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-border last:border-0 hover:bg-muted/30"
-                    >
-                      {columns.map((col) => (
-                        <td
-                          key={col}
-                          className="whitespace-nowrap px-3 py-1.5 text-foreground"
-                        >
-                          {formatCellValue(row[col])}
-                        </td>
+              {domains.map((d) => (
+                <TabsContent key={d.domain} value={d.domain}>
+                  {domainLoading && activeDomain === d.domain && (
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Skeleton key={i} className="h-8" />
                       ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </div>
+                  )}
+
+                  {domainError && activeDomain === d.domain && (
+                    <Alert variant="destructive" className="text-center">
+                      <AlertDescription>{domainError}</AlertDescription>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDomainCache((prev) => {
+                            const next = { ...prev }
+                            delete next[d.domain]
+                            return next
+                          })
+                        }}
+                        className="mt-3 text-sm font-medium text-primary hover:underline"
+                      >
+                        Retry
+                      </button>
+                    </Alert>
+                  )}
+
+                  {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length === 0 && (
+                    <EmptyState title={`No data for ${d.domain}`} />
+                  )}
+
+                  {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length > 0 && (
+                    <div className="overflow-x-auto rounded-lg border border-border">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/50">
+                            {columns.map((col) => (
+                              <th
+                                key={col}
+                                className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground"
+                              >
+                                {formatColumnHeader(col)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activeRows.map((row, i) => (
+                            <tr
+                              key={i}
+                              className="border-b border-border last:border-0 hover:bg-muted/30"
+                            >
+                              {columns.map((col) => (
+                                <td
+                                  key={col}
+                                  className="whitespace-nowrap px-3 py-1.5 text-foreground"
+                                >
+                                  {formatCellValue(row[col])}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
           )}
 
           {domains.length === 0 && (
-            <div className="rounded-lg border border-border p-12 text-center">
-              <p className="text-sm text-muted-foreground">No domain data found for this study</p>
-            </div>
+            <EmptyState title="No domain data found for this study" />
           )}
         </div>
       )}

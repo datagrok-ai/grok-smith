@@ -1,6 +1,15 @@
 import { useCallback, useRef, useState } from 'react'
 
-import { PageLayout, useDatagrok } from '@datagrok/app-kit'
+import {
+  PageLayout,
+  useDatagrok,
+  Button,
+  Spinner,
+  Alert,
+  AlertDescription,
+  Card,
+  CardContent,
+} from '@datagrok/app-kit'
 
 import { nav } from '../nav'
 
@@ -122,106 +131,102 @@ export default function UploadPage() {
         )}
 
         {state.status === 'uploading' && (
-          <div className="flex flex-col items-center rounded-lg border border-border p-16 text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="mt-4 text-lg font-medium text-foreground">
-              Importing study...
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {state.filename}
-            </p>
-          </div>
+          <Card>
+            <CardContent className="flex flex-col items-center p-16 text-center">
+              <Spinner />
+              <p className="mt-4 text-lg font-medium text-foreground">
+                Importing study...
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {state.filename}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {state.status === 'success' && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted p-6">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">✅</div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Study imported successfully
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {state.result.studyCode} — {state.result.studyTitle}
-                  </p>
+            <Card className="bg-muted">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">✅</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Study imported successfully
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {state.result.studyCode} — {state.result.studyTitle}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg border border-border p-4">
-                <p className="text-sm text-muted-foreground">Study ID</p>
-                <p className="mt-1 font-mono text-sm text-foreground">
-                  {state.result.studyId}
-                </p>
-              </div>
-              <div className="rounded-lg border border-border p-4">
-                <p className="text-sm text-muted-foreground">Subjects</p>
-                <p className="mt-1 text-2xl font-semibold text-foreground">
-                  {state.result.subjectCount}
-                </p>
-              </div>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Study ID</p>
+                  <p className="mt-1 font-mono text-sm text-foreground">
+                    {state.result.studyId}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground">Subjects</p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {state.result.subjectCount}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
             {Object.keys(state.result.domainCounts).length > 0 && (
-              <div className="rounded-lg border border-border p-4">
-                <p className="mb-3 text-sm font-medium text-foreground">
-                  Domain Counts
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(state.result.domainCounts)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([domain, count]) => (
-                      <div
-                        key={domain}
-                        className="flex items-center justify-between rounded bg-muted px-3 py-1.5"
-                      >
-                        <span className="text-sm font-medium text-foreground">
-                          {domain}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {count}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-3 text-sm font-medium text-foreground">
+                    Domain Counts
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.entries(state.result.domainCounts)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([domain, count]) => (
+                        <div
+                          key={domain}
+                          className="flex items-center justify-between rounded bg-muted px-3 py-1.5"
+                        >
+                          <span className="text-sm font-medium text-foreground">
+                            {domain}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {count}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
-            <button
-              type="button"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              onClick={reset}
-            >
-              Upload Another
-            </button>
+            <Button onClick={reset}>Upload Another</Button>
           </div>
         )}
 
         {state.status === 'error' && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6">
+            <Alert variant="destructive">
               <div className="flex items-start gap-3">
                 <div className="text-2xl">❌</div>
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">
                     Import failed
                   </h3>
-                  <p className="mt-1 text-sm text-destructive">
-                    {state.message}
-                  </p>
+                  <AlertDescription>{state.message}</AlertDescription>
                 </div>
               </div>
-            </div>
+            </Alert>
 
-            <button
-              type="button"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              onClick={reset}
-            >
-              Try Again
-            </button>
+            <Button onClick={reset}>Try Again</Button>
           </div>
         )}
       </div>

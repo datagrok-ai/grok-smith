@@ -31,6 +31,27 @@
   --color-muted-foreground: #757575;
   --color-border: #e0e0e0;
   --color-destructive: #f44336;
+  --color-destructive-foreground: #ffffff;
+
+  /* Popover */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #212121;
+
+  /* Accent */
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #212121;
+
+  /* Focus ring & input border */
+  --color-ring: #2196f3;
+  --color-input: #e0e0e0;
+
+  /* Semantic status */
+  --color-success: #4caf50;
+  --color-success-foreground: #ffffff;
+  --color-warning: #ff9800;
+  --color-warning-foreground: #ffffff;
+  --color-info: #2196f3;
+  --color-info-foreground: #ffffff;
 
   /* Spacing scale (4px base) */
   --spacing-1: 0.25rem;
