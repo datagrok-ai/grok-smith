@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import {
-  PageLayout,
+  View,
   useApi,
   ApiRequestError,
   Button,
@@ -29,7 +29,7 @@ import type { BadgeVariant, DataGridColumn } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
-import { nav } from '../nav'
+import { SendNav } from '../components/send-nav'
 
 interface StudyRow {
   id: string
@@ -168,15 +168,18 @@ export default function HomePage() {
   ]
 
   return (
-    <PageLayout title="SEND — Animal Studies" nav={nav}>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Studies</h2>
-          <Button asChild>
-            <Link to="/upload">Upload Study</Link>
-          </Button>
-        </div>
-
+    <View
+      name="Studies"
+      breadcrumbs={[{ label: 'SEND' }, { label: 'Studies' }]}
+      toolbox={<SendNav />}
+      ribbon={
+        <Button asChild>
+          <Link to="/upload">Upload Study</Link>
+        </Button>
+      }
+      status={`${String(studies.length)} studies`}
+    >
+      <div className="p-4 space-y-4">
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -238,6 +241,6 @@ export default function HomePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </PageLayout>
+    </View>
   )
 }

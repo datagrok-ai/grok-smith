@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
 import {
-  PageLayout,
+  View,
   useDatagrok,
   Button,
   Spinner,
@@ -11,7 +11,7 @@ import {
   CardContent,
 } from '@datagrok/app-kit'
 
-import { nav } from '../nav'
+import { SendNav } from '../components/send-nav'
 
 import type { ImportResult } from '../../../shared/types'
 
@@ -89,8 +89,12 @@ export default function UploadPage() {
   }, [])
 
   return (
-    <PageLayout title="Upload SEND Dataset" nav={nav}>
-      <div className="mx-auto max-w-2xl space-y-6">
+    <View
+      name="Upload"
+      breadcrumbs={[{ label: 'SEND' }, { label: 'Upload' }]}
+      toolbox={<SendNav />}
+    >
+      <div className="mx-auto max-w-2xl space-y-6 p-4">
         {state.status === 'idle' && (
           <div
             role="button"
@@ -230,6 +234,6 @@ export default function UploadPage() {
           </div>
         )}
       </div>
-    </PageLayout>
+    </View>
   )
 }

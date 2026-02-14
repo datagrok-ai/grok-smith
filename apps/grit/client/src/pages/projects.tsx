@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import {
-  PageLayout,
+  View,
   useApi,
   ApiRequestError,
   Button,
@@ -32,8 +32,6 @@ import {
   AlertDialogCancel,
 } from '@datagrok/app-kit'
 import type { DataGridColumn } from '@datagrok/app-kit'
-
-import { nav } from '../nav'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -183,12 +181,13 @@ export default function ProjectsPage() {
   ]
 
   return (
-    <PageLayout title="GRIT — Issue Tracking" nav={nav}>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Projects</h2>
-          <Button onClick={() => setShowCreate(true)}>New Project</Button>
-        </div>
+    <View
+      name="Projects"
+      breadcrumbs={[{ label: 'GRIT' }, { label: 'Projects' }]}
+      ribbon={<Button onClick={() => setShowCreate(true)}>New Project</Button>}
+      status={`${String(projects.length)} projects`}
+    >
+      <div className="p-4 space-y-4">
 
         {error && (
           <Alert variant="destructive">
@@ -303,6 +302,6 @@ export default function ProjectsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </PageLayout>
+    </View>
   )
 }

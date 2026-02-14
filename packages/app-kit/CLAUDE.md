@@ -2,10 +2,16 @@
 
 Client-side UI library for grok-smith apps. Provides components, theme, hooks, and a mock adapter for local development.
 
+For full conventions, see `/docs/CODING.md`, `/docs/DATABASE.md`, `/docs/DESIGN.md`.
+
 ## What it provides
 
+### Layout
+- `Shell` — App-level frame wrapping the router. Manages toolbox, context panel, status bar, resize handles, keyboard shortcuts.
+- `View` — Per-page component that declares slot content (toolbox, ribbon, contextPanel, breadcrumbs, status) for Shell.
+- `useShell()` — Hook for accessing panel state and actions from any component inside Shell.
+
 ### Components
-- `PageLayout` — Standard app shell with sidebar nav and header
 - `DataGrid` — AG Grid Community wrapper with Datagrok theme. Use `columnDefs` for explicit columns, `autoColumns` for dynamic data. Supports sorting, filtering, column resize, and virtual scrolling out of the box.
 
 ### Hooks

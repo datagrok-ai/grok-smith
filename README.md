@@ -14,7 +14,7 @@ Every app in this repo is built and maintained with [Claude Code](https://docs.a
 
 ### [`@datagrok/app-kit`](packages/app-kit/)
 
-Shared component library and theme for all apps. Wraps Shadcn/ui with Datagrok-branded components (`PageLayout`, `DataGrid`, forms, etc.) so apps get a consistent look and feel without importing Shadcn directly.
+Shared component library and theme for all apps. Wraps Shadcn/ui with Datagrok-branded components (`Shell`, `View`, `DataGrid`, forms, etc.) so apps get a consistent look and feel without importing Shadcn directly.
 
 ### [`create-app`](tools/create-app/)
 

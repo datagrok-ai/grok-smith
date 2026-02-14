@@ -3,7 +3,10 @@ export { cn } from './lib/cn'
 
 // Components
 export {
-  PageLayout,
+  // Shell layout
+  Shell,
+  View,
+  useShell,
   // Display
   Button,
   Badge,
@@ -70,8 +73,13 @@ export {
   FormField,
 } from './components'
 export type {
-  PageLayoutProps,
-  NavItem,
+  ShellProps,
+  ViewProps,
+  ViewSlots,
+  BreadcrumbItem,
+  ShellPanelState,
+  ShellActions,
+  ShellContextValue,
   ButtonProps,
   BadgeProps,
   BadgeVariant,

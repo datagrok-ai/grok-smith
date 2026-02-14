@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 
 import {
-  PageLayout,
+  View,
   useApi,
   Badge,
   Skeleton,
@@ -19,7 +19,7 @@ import type { BadgeVariant } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
-import { nav } from '../nav'
+import { SendNav } from '../components/send-nav'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,119 +149,134 @@ export default function StudyPage() {
   const study = studyResponse?.study
   const domains = studyResponse?.domains ?? []
 
+  const domainStatus = activeDomain && activeRows.length > 0
+    ? `${activeDomain}: ${String(activeRows.length)} rows`
+    : undefined
+
   return (
-    <PageLayout title={study ? `Study: ${study.studyId}` : 'Study'} nav={nav}>
-      {loading && (
-        <div className="space-y-4">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-10" />
-          <Skeleton className="h-64" />
-        </div>
-      )}
-
-      {error && (
-        <Alert variant="destructive" className="text-center">
-          <AlertDescription>{error}</AlertDescription>
-          <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
-            Back to Studies
-          </Link>
-        </Alert>
-      )}
-
-      {!loading && !error && study && (
-        <div className="space-y-4">
-          {/* Study header */}
-          <div className="flex items-start justify-between rounded-lg border border-border bg-muted/30 p-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-foreground">{study.title}</h2>
-                <Badge variant={study.status as BadgeVariant}>
-                  {STATUS_LABELS[study.status]}
-                </Badge>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                <span>ID: <span className="font-medium text-foreground">{study.studyId}</span></span>
-                {study.species && <span>Species: {study.species}</span>}
-                {study.strain && <span>Strain: {study.strain}</span>}
-                {study.route && <span>Route: {study.route}</span>}
-                {study.testArticle && <span>Test Article: {study.testArticle}</span>}
-              </div>
-            </div>
-            <Link
-              to="/"
-              className="shrink-0 text-sm font-medium text-primary hover:underline"
-            >
-              All Studies
-            </Link>
+    <View
+      name={study ? `Study: ${study.studyId}` : 'Study'}
+      breadcrumbs={[
+        { label: 'SEND' },
+        { label: 'Studies', href: '/' },
+        { label: study?.studyId ?? '...' },
+      ]}
+      toolbox={<SendNav />}
+      status={domainStatus}
+    >
+      <div className="p-4">
+        {loading && (
+          <div className="space-y-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-10" />
+            <Skeleton className="h-64" />
           </div>
+        )}
 
-          {/* Domain tabs + data */}
-          {domains.length > 0 && (
-            <Tabs
-              value={activeDomain ?? undefined}
-              onValueChange={setActiveDomain}
-            >
-              <TabsList>
+        {error && (
+          <Alert variant="destructive" className="text-center">
+            <AlertDescription>{error}</AlertDescription>
+            <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+              Back to Studies
+            </Link>
+          </Alert>
+        )}
+
+        {!loading && !error && study && (
+          <div className="space-y-4">
+            {/* Study header */}
+            <div className="flex items-start justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-foreground">{study.title}</h2>
+                  <Badge variant={study.status as BadgeVariant}>
+                    {STATUS_LABELS[study.status]}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                  <span>ID: <span className="font-medium text-foreground">{study.studyId}</span></span>
+                  {study.species && <span>Species: {study.species}</span>}
+                  {study.strain && <span>Strain: {study.strain}</span>}
+                  {study.route && <span>Route: {study.route}</span>}
+                  {study.testArticle && <span>Test Article: {study.testArticle}</span>}
+                </div>
+              </div>
+              <Link
+                to="/"
+                className="shrink-0 text-sm font-medium text-primary hover:underline"
+              >
+                All Studies
+              </Link>
+            </div>
+
+            {/* Domain tabs + data */}
+            {domains.length > 0 && (
+              <Tabs
+                value={activeDomain ?? undefined}
+                onValueChange={setActiveDomain}
+              >
+                <TabsList>
+                  {domains.map((d) => (
+                    <TabsTrigger key={d.domain} value={d.domain} title={`${d.label} (${String(d.count)} rows)`}>
+                      {d.domain}
+                      <span className="ml-1 text-xs text-muted-foreground">{d.count}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
                 {domains.map((d) => (
-                  <TabsTrigger key={d.domain} value={d.domain} title={`${d.label} (${String(d.count)} rows)`}>
-                    {d.domain}
-                    <span className="ml-1 text-xs text-muted-foreground">{d.count}</span>
-                  </TabsTrigger>
+                  <TabsContent key={d.domain} value={d.domain}>
+                    {domainLoading && activeDomain === d.domain && (
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Skeleton key={i} className="h-8" />
+                        ))}
+                      </div>
+                    )}
+
+                    {domainError && activeDomain === d.domain && (
+                      <Alert variant="destructive" className="text-center">
+                        <AlertDescription>{domainError}</AlertDescription>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDomainCache((prev) => {
+                              const next = { ...prev }
+                              delete next[d.domain]
+                              return next
+                            })
+                          }}
+                          className="mt-3 text-sm font-medium text-primary hover:underline"
+                        >
+                          Retry
+                        </button>
+                      </Alert>
+                    )}
+
+                    {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length === 0 && (
+                      <EmptyState title={`No data for ${d.domain}`} />
+                    )}
+
+                    {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length > 0 && (
+                      <DataGrid
+                        rowData={activeRows}
+                        autoColumns
+                        formatHeader={formatColumnHeader}
+                        formatCell={formatCellValue}
+                        height="auto"
+                      />
+                    )}
+                  </TabsContent>
                 ))}
-              </TabsList>
+              </Tabs>
+            )}
 
-              {domains.map((d) => (
-                <TabsContent key={d.domain} value={d.domain}>
-                  {domainLoading && activeDomain === d.domain && (
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <Skeleton key={i} className="h-8" />
-                      ))}
-                    </div>
-                  )}
-
-                  {domainError && activeDomain === d.domain && (
-                    <Alert variant="destructive" className="text-center">
-                      <AlertDescription>{domainError}</AlertDescription>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDomainCache((prev) => {
-                            const next = { ...prev }
-                            delete next[d.domain]
-                            return next
-                          })
-                        }}
-                        className="mt-3 text-sm font-medium text-primary hover:underline"
-                      >
-                        Retry
-                      </button>
-                    </Alert>
-                  )}
-
-                  {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length === 0 && (
-                    <EmptyState title={`No data for ${d.domain}`} />
-                  )}
-
-                  {!domainLoading && !domainError && activeDomain === d.domain && activeRows.length > 0 && (
-                    <DataGrid
-                      rowData={activeRows}
-                      autoColumns
-                      formatHeader={formatColumnHeader}
-                      formatCell={formatCellValue}
-                      height="auto"
-                    />
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
-
-          {domains.length === 0 && (
-            <EmptyState title="No domain data found for this study" />
-          )}
-        </div>
-      )}
-    </PageLayout>
+            {domains.length === 0 && (
+              <EmptyState title="No domain data found for this study" />
+            )}
+          </div>
+        )}
+      </div>
+    </View>
   )
 }

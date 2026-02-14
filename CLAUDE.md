@@ -33,6 +33,7 @@ tools/
 - **Well-known UUIDs**: Import `SYSTEM_USER_ID`, `ADMIN_USER_ID` from `@datagrok/core-schema` — never define local copies.
 
 ## Always
+- Use `<Shell>` + `<View>` from `@datagrok/app-kit` for app layout
 - Use `<DataGrid>` from `@datagrok/app-kit` for all tabular data (powered by AG Grid Community)
 - Use `@datagrok/app-kit` components, never raw HTML or direct Shadcn imports
 - Use `createApp()` from `@datagrok/server-kit` for server setup, never manual Hono boilerplate
@@ -51,3 +52,4 @@ tools/
 - Use `pgEnum()` — use `varchar` + Zod validation instead (pgEnum leaks into public schema)
 - Define local `SYSTEM_USER_ID` / `ADMIN_USER_ID` constants — import from `@datagrok/core-schema`
 - Hardcode database connection strings — use `DATABASE_URL` env var via `createDb()`
+- Deprecate code — just delete it. No `@deprecated`, no backwards-compat shims. We iterate quickly with no external consumers.

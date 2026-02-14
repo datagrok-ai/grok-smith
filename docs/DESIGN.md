@@ -5,10 +5,30 @@
 - Use @datagrok/app-kit components as the primary building blocks
 - Underneath, app-kit uses Shadcn/ui — never import Shadcn directly in app code
 
-## Layout
-- Every app uses `<PageLayout>` from app-kit for the shell
-- Standard structure: sidebar nav (collapsible) + header with breadcrumbs + main content
-- Max content width: 1200px for forms, full width for data grids
+## App Layout
+- Every app uses `<Shell appName="...">` from app-kit, wrapping the router in App.tsx.
+- Each page uses `<View>` to declare its slots (toolbox, ribbon, contextPanel, breadcrumbs, status).
+- The shell consists of the following: (toolbox, view, context panel) left to right, and (status bar) at the bottom
+  - sidebar nav (resizable, 160–400px). This is also called 'toolbox'.
+    'Datagrok / {appName}' label in the top left corner.
+    Typically, an app has a tree there - clicking on the item changes the view.
+    Toggle via Ctrl+B or status bar icon.
+  - view that occupies all available area. Top to bottom:
+    - header (40px): breadcrumbs left, ribbon controls right
+    - main area (no padding — views control their own)
+  - resizable context panel on the right (200–500px). When you click on stuff, details are often shown there.
+    Toggle via Ctrl+I or status bar icon.
+  - status bar (24px) at the bottom. Has three zones:
+    - result of last operation, or progress of the ongoing operation
+    - quick summary of the current view (like number of subjects we are currently looking at in the SEND app)
+    - global tool icons on the right
+      - toggle toolbox visibility
+      - toggle context panel visibility
+      - bring current view to full screen
+
+View
+Each `<View>` provides optional slot props: `toolbox`, `ribbon`, `contextPanel`, `breadcrumbs`, `status`.
+Shell conditionally renders panels based on which slots the current view provides.
 
 ## Forms
 - Labels above inputs

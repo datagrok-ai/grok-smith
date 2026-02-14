@@ -1,5 +1,14 @@
-export { PageLayout } from './page-layout'
-export type { PageLayoutProps, NavItem } from './page-layout'
+// Shell layout system
+export { Shell, View, useShell } from './shell'
+export type {
+  ShellProps,
+  ViewProps,
+  ViewSlots,
+  BreadcrumbItem,
+  ShellPanelState,
+  ShellActions,
+  ShellContextValue,
+} from './shell'
 
 // Display components
 export { Button } from './ui/button'

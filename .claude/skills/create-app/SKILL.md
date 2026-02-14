@@ -221,20 +221,7 @@ const app = createApp({
 serve({ fetch: app.fetch, hostname: '0.0.0.0', port: 3000 })
 ```
 
-### Step 11: Create Navigation
-
-Create `apps/<app-name>/client/src/nav.ts`:
-
-```ts
-import type { NavItem } from '@datagrok/app-kit'
-
-export const nav: NavItem[] = [
-  { label: '<Entity List>', href: '/', icon: '<emoji>' },
-  // Add one entry per page
-]
-```
-
-### Step 12: Build Client Pages
+### Step 11: Build Client Pages
 
 Create page files in `apps/<app-name>/client/src/pages/`. Each page follows this structure:
 
@@ -243,7 +230,7 @@ Create page files in `apps/<app-name>/client/src/pages/`. Each page follows this
 import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  PageLayout,
+  View,
   useApi,
   ApiRequestError,
   Button,
@@ -251,21 +238,25 @@ import {
   Alert,
   AlertDescription,
   EmptyState,
-  DataTable,
+  DataGrid,
 } from '@datagrok/app-kit'
-import type { ColumnDef } from '@datagrok/app-kit'
-import { nav } from '../nav'
+import type { DataGridColumn } from '@datagrok/app-kit'
 
 // Define the row type inline or import from shared
 interface <Entity>Row { ... }
 
 export default function HomePage() {
   const api = useApi()
-  // fetch data, define columns, render with DataTable
+  // fetch data, define columns, render with DataGrid
   return (
-    <PageLayout title="<App Title>" nav={nav}>
-      ...
-    </PageLayout>
+    <View
+      name="<Entity List>"
+      breadcrumbs={[{ label: '<AppName>' }, { label: '<Entities>' }]}
+      ribbon={<Button>Create</Button>}
+      status={`${count} <entities>`}
+    >
+      <div className="p-4">...</div>
+    </View>
   )
 }
 ```
@@ -273,24 +264,26 @@ export default function HomePage() {
 **Detail/form page:**
 ```tsx
 import { useParams } from 'react-router-dom'
-import { PageLayout, useApi, Card, ... } from '@datagrok/app-kit'
-import { nav } from '../nav'
+import { View, useApi, Card, ... } from '@datagrok/app-kit'
 
 export default function <Entity>Page() {
   const { id } = useParams()
   // fetch and display entity detail
   return (
-    <PageLayout title="<Entity> Detail" nav={nav}>
-      ...
-    </PageLayout>
+    <View
+      name="<Entity> Detail"
+      breadcrumbs={[{ label: '<AppName>' }, { label: '<Entities>', href: '/' }, { label: '...' }]}
+    >
+      <div className="p-4">...</div>
+    </View>
   )
 }
 ```
 
 **Component rules:**
 - Always import from `@datagrok/app-kit`, never from Shadcn directly
-- Use `PageLayout` as the outermost wrapper on every page, always pass `nav`
-- Use `DataTable` for any tabular data with `ColumnDef<T>[]` for column definitions
+- Use `View` on every page to declare Shell slots (toolbox, ribbon, contextPanel, breadcrumbs, status)
+- Use `DataGrid` for any tabular data with `DataGridColumn<T>[]` for column definitions
 - Use `useApi()` for all fetch calls — it prefixes `/api` and sends the auth header
 - Use `EmptyState` for empty list views
 - Use `Skeleton` for loading states
@@ -298,28 +291,31 @@ export default function <Entity>Page() {
 - Default sort: most recently created first
 - Always show `createdAt` and `createdBy` in list views
 
-### Step 13: Update Client Routing
+### Step 12: Update Client Routing
 
-Update `apps/<app-name>/client/src/App.tsx` to add routes for all new pages:
+Update `apps/<app-name>/client/src/App.tsx` to wrap routes in `Shell` and add routes for all new pages:
 
 ```tsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Shell } from '@datagrok/app-kit'
 import HomePage from './pages/home'
 import <Entity>Page from './pages/<entity>'
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/<entity>/:id" element={<<Entity>Page />} />
-      </Routes>
+      <Shell appName="<AppNamePascal>">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/<entity>/:id" element={<<Entity>Page />} />
+        </Routes>
+      </Shell>
     </BrowserRouter>
   )
 }
 ```
 
-### Step 14: Run Typecheck and Lint
+### Step 13: Run Typecheck and Lint
 
 ```bash
 npm run typecheck --workspace=apps/<app-name>
@@ -331,7 +327,7 @@ Fix any errors until the typecheck passes cleanly. If lint is configured:
 npm run lint --workspace=apps/<app-name>
 ```
 
-### Step 15: Update STATUS.md
+### Step 14: Update STATUS.md
 
 Mark completed items in `apps/<app-name>/docs/STATUS.md`:
 - [x] Project scaffolded

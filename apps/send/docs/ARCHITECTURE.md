@@ -21,4 +21,4 @@
 
 ## Integration Points
 - Datagrok: embedded as panel, can push data to Datagrok dataframes for visualization
-- app-kit: provides PageLayout, DataGrid, theme, auth context
+- app-kit: provides Shell, View, DataGrid, theme, auth context

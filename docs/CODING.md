@@ -29,6 +29,10 @@
 - `/server/services/` — business logic, called by routes
 - `/server/db/` — Drizzle client, migrations
 
+## Removing Code
+- Do not deprecate — just delete. We iterate quickly and there are no external consumers.
+- When replacing a component/module, remove the old one in the same PR. No `@deprecated` annotations, no re-exports for backwards compatibility.
+
 ## Testing
 - Use Vitest
 - Test files co-located: `foo.ts` → `foo.test.ts`

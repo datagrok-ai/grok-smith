@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import {
-  PageLayout,
+  View,
   useApi,
   ApiRequestError,
   Button,
@@ -36,8 +36,6 @@ import {
   ISSUE_PRIORITIES,
   ISSUE_STATUSES,
 } from '../../../shared/constants'
-
-import { nav } from '../nav'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -98,7 +96,7 @@ const TYPE_ICONS: Record<IssueType, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// Tree Panel
+// Tree Panel (rendered in Shell toolbox)
 // ---------------------------------------------------------------------------
 
 function TreePanel({
@@ -122,104 +120,98 @@ function TreePanel({
   const [usersOpen, setUsersOpen] = useState(true)
 
   return (
-    <div className="flex h-full w-[200px] min-w-[200px] flex-col border-r border-border bg-muted/30">
-      <div className="flex-1 overflow-y-auto p-2">
-        {/* Projects section */}
-        <button
-          type="button"
-          className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
-          onClick={() => setProjectsOpen(!projectsOpen)}
-        >
-          <span className="text-[10px]">{projectsOpen ? '▼' : '▶'}</span>
-          Projects
-        </button>
-        {projectsOpen && (
-          <div className="ml-1">
+    <div className="p-2">
+      {/* Projects section */}
+      <button
+        type="button"
+        className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
+        onClick={() => setProjectsOpen(!projectsOpen)}
+      >
+        <span className="text-[10px]">{projectsOpen ? '\u25BC' : '\u25B6'}</span>
+        Projects
+      </button>
+      {projectsOpen && (
+        <div className="ml-1">
+          <button
+            type="button"
+            className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
+              activeProjectId === 'all' && selectedItem?.type !== 'project' && selectedItem?.type !== 'user'
+                ? 'bg-primary/10 font-medium text-primary'
+                : 'text-foreground'
+            }`}
+            onClick={onSelectAllProjects}
+          >
+            All Issues
+          </button>
+          {projects.map((p) => (
             <button
+              key={p.id}
               type="button"
               className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-                activeProjectId === 'all' && selectedItem?.type !== 'project' && selectedItem?.type !== 'user'
+                selectedItem?.type === 'project' && selectedItem.data.id === p.id
+                  ? 'bg-primary/10 font-medium text-primary'
+                  : activeProjectId === p.id
+                    ? 'font-medium text-foreground'
+                    : 'text-foreground'
+              }`}
+              onClick={() => onSelectProject(p)}
+            >
+              <span className="mr-1.5 font-mono text-xs text-muted-foreground">{p.key}</span>
+              <span className="truncate">{p.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Users section */}
+      <button
+        type="button"
+        className="mt-3 flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
+        onClick={() => setUsersOpen(!usersOpen)}
+      >
+        <span className="text-[10px]">{usersOpen ? '\u25BC' : '\u25B6'}</span>
+        Users
+      </button>
+      {usersOpen && (
+        <div className="ml-1">
+          {users.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
+                selectedItem?.type === 'user' && selectedItem.data.id === u.id
                   ? 'bg-primary/10 font-medium text-primary'
                   : 'text-foreground'
               }`}
-              onClick={onSelectAllProjects}
+              onClick={() => onSelectUser(u)}
             >
-              All Issues
+              {u.displayName}
             </button>
-            {projects.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-                  selectedItem?.type === 'project' && selectedItem.data.id === p.id
-                    ? 'bg-primary/10 font-medium text-primary'
-                    : activeProjectId === p.id
-                      ? 'font-medium text-foreground'
-                      : 'text-foreground'
-                }`}
-                onClick={() => onSelectProject(p)}
-              >
-                <span className="mr-1.5 font-mono text-xs text-muted-foreground">{p.key}</span>
-                <span className="truncate">{p.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Users section */}
-        <button
-          type="button"
-          className="mt-3 flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
-          onClick={() => setUsersOpen(!usersOpen)}
-        >
-          <span className="text-[10px]">{usersOpen ? '▼' : '▶'}</span>
-          Users
-        </button>
-        {usersOpen && (
-          <div className="ml-1">
-            {users.map((u) => (
-              <button
-                key={u.id}
-                type="button"
-                className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-                  selectedItem?.type === 'user' && selectedItem.data.id === u.id
-                    ? 'bg-primary/10 font-medium text-primary'
-                    : 'text-foreground'
-                }`}
-                onClick={() => onSelectUser(u)}
-              >
-                {u.displayName}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Context Panel
+// Context Panel (rendered in Shell context panel)
 // ---------------------------------------------------------------------------
 
-function ContextPanel({ item }: { item: SelectedItem | null }) {
+function ContextPanelContent({ item }: { item: SelectedItem | null }) {
   if (!item) {
     return (
-      <div className="flex h-full w-[300px] min-w-[300px] flex-col border-l border-border bg-muted/20">
-        <div className="flex flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
-          Select an item to view details
-        </div>
+      <div className="flex flex-1 items-center justify-center p-4 text-sm text-muted-foreground">
+        Select an item to view details
       </div>
     )
   }
 
   return (
-    <div className="flex h-full w-[300px] min-w-[300px] flex-col border-l border-border bg-muted/20">
-      <div className="flex-1 overflow-y-auto p-4">
-        {item.type === 'issue' && <IssueDetail issue={item.data} />}
-        {item.type === 'project' && <ProjectDetail project={item.data} />}
-        {item.type === 'user' && <UserDetail user={item.data} />}
-      </div>
+    <div className="p-4">
+      {item.type === 'issue' && <IssueDetail issue={item.data} />}
+      {item.type === 'project' && <ProjectDetail project={item.data} />}
+      {item.type === 'user' && <UserDetail user={item.data} />}
     </div>
   )
 }
@@ -593,9 +585,10 @@ export default function HomePage() {
   // -------------------------------------------------------------------------
 
   return (
-    <PageLayout title="GRIT — Issue Tracking" nav={nav}>
-      <div className="flex h-full -m-6">
-        {/* Left: Tree panel */}
+    <View
+      name="Issues"
+      breadcrumbs={[{ label: 'GRIT' }, { label: 'Issues' }]}
+      toolbox={
         <TreePanel
           projects={projects}
           users={users}
@@ -605,96 +598,87 @@ export default function HomePage() {
           onSelectAllProjects={handleSelectAllProjects}
           onSelectUser={handleSelectUser}
         />
+      }
+      contextPanel={<ContextPanelContent item={selectedItem} />}
+      ribbon={
+        <>
+          <Input
+            placeholder="Search by name or description..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-sm"
+          />
+          <Button
+            onClick={() => {
+              setNewIssue((prev) => ({
+                ...prev,
+                projectId: projectFilter !== 'all' ? projectFilter : (projects[0]?.id ?? ''),
+              }))
+              setShowCreate(true)
+            }}
+            disabled={projects.length === 0}
+          >
+            New Issue
+          </Button>
+        </>
+      }
+      status={`${String(issues.length)} issues`}
+    >
+      <div className="flex-1 overflow-auto p-4">
+        <div className="space-y-4">
+          {/* Error */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null)
+                  void fetchIssues(search, projectFilter)
+                }}
+                className="mt-2 text-sm font-medium text-primary hover:underline"
+              >
+                Retry
+              </button>
+            </Alert>
+          )}
 
-        {/* Center: Issues grid */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto p-4">
-            <div className="space-y-4">
-              {/* Toolbar: search + create */}
-              <div className="flex items-center gap-3">
-                <Input
-                  placeholder="Search by name or description..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="max-w-sm"
-                />
-
-                <div className="flex-1" />
-
-                <Button
-                  onClick={() => {
-                    setNewIssue((prev) => ({
-                      ...prev,
-                      projectId: projectFilter !== 'all' ? projectFilter : (projects[0]?.id ?? ''),
-                    }))
-                    setShowCreate(true)
-                  }}
-                  disabled={projects.length === 0}
-                >
-                  New Issue
-                </Button>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setError(null)
-                      void fetchIssues(search, projectFilter)
-                    }}
-                    className="mt-2 text-sm font-medium text-primary hover:underline"
-                  >
-                    Retry
-                  </button>
-                </Alert>
-              )}
-
-              {/* Loading */}
-              {loading && (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12" />
-                  ))}
-                </div>
-              )}
-
-              {/* Empty */}
-              {!loading && !error && issues.length === 0 && (
-                <EmptyState
-                  icon="!"
-                  title="No issues found"
-                  action={
-                    projects.length > 0 ? (
-                      <Button onClick={() => setShowCreate(true)}>Create First Issue</Button>
-                    ) : undefined
-                  }
-                />
-              )}
-
-              {/* Data table */}
-              {!loading && !error && issues.length > 0 && (
-                <DataGrid
-                  rowData={issues}
-                  columnDefs={columns}
-                  getRowId={(r) => r.id}
-                  onRowClicked={handleRowClick}
-                  height="auto"
-                />
-              )}
+          {/* Loading */}
+          {loading && (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-12" />
+              ))}
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Right: Context panel */}
-        <ContextPanel item={selectedItem} />
+          {/* Empty */}
+          {!loading && !error && issues.length === 0 && (
+            <EmptyState
+              icon="!"
+              title="No issues found"
+              action={
+                projects.length > 0 ? (
+                  <Button onClick={() => setShowCreate(true)}>Create First Issue</Button>
+                ) : undefined
+              }
+            />
+          )}
+
+          {/* Data table */}
+          {!loading && !error && issues.length > 0 && (
+            <DataGrid
+              rowData={issues}
+              columnDefs={columns}
+              getRowId={(r) => r.id}
+              onRowClicked={handleRowClick}
+              height="auto"
+            />
+          )}
+        </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Create Issue Dialog                                                */}
-      {/* ----------------------------------------------------------------- */}
+      {/* Create Issue Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent>
           <DialogHeader>
@@ -810,6 +794,6 @@ export default function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageLayout>
+    </View>
   )
 }
