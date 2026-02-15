@@ -81,3 +81,7 @@ export {
 } from './ui/select'
 export { FormField } from './ui/form-field'
 export type { FormFieldProps } from './ui/form-field'
+
+// Tree
+export { TreeView } from './ui/tree-view'
+export type { TreeViewItem, TreeViewProps } from './ui/tree-view'

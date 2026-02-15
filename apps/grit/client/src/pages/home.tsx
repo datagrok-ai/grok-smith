@@ -24,8 +24,9 @@ import {
   DialogTitle,
   Textarea,
   FormField,
+  TreeView,
 } from '@datagrok/app-kit'
-import type { DataGridColumn, BadgeVariant } from '@datagrok/app-kit'
+import type { DataGridColumn, BadgeVariant, TreeViewItem } from '@datagrok/app-kit'
 
 import type { IssueType, IssuePriority, IssueStatus } from '../../../shared/constants'
 import {
@@ -96,102 +97,29 @@ const TYPE_ICONS: Record<IssueType, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// Tree Panel (rendered in Shell toolbox)
+// Tree data builder (for Shell toolbox)
 // ---------------------------------------------------------------------------
 
-function TreePanel({
-  projects,
-  users,
-  activeProjectId,
-  selectedItem,
-  onSelectProject,
-  onSelectAllProjects,
-  onSelectUser,
-}: {
-  projects: ProjectOption[]
-  users: UserOption[]
-  activeProjectId: string
-  selectedItem: SelectedItem | null
-  onSelectProject: (p: ProjectOption) => void
-  onSelectAllProjects: () => void
-  onSelectUser: (u: UserOption) => void
-}) {
-  const [projectsOpen, setProjectsOpen] = useState(true)
-  const [usersOpen, setUsersOpen] = useState(true)
-
-  return (
-    <div className="p-2">
-      {/* Projects section */}
-      <button
-        type="button"
-        className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
-        onClick={() => setProjectsOpen(!projectsOpen)}
-      >
-        <span className="text-[10px]">{projectsOpen ? '\u25BC' : '\u25B6'}</span>
-        Projects
-      </button>
-      {projectsOpen && (
-        <div className="ml-1">
-          <button
-            type="button"
-            className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-              activeProjectId === 'all' && selectedItem?.type !== 'project' && selectedItem?.type !== 'user'
-                ? 'bg-primary/10 font-medium text-primary'
-                : 'text-foreground'
-            }`}
-            onClick={onSelectAllProjects}
-          >
-            All Issues
-          </button>
-          {projects.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-                selectedItem?.type === 'project' && selectedItem.data.id === p.id
-                  ? 'bg-primary/10 font-medium text-primary'
-                  : activeProjectId === p.id
-                    ? 'font-medium text-foreground'
-                    : 'text-foreground'
-              }`}
-              onClick={() => onSelectProject(p)}
-            >
-              <span className="mr-1.5 font-mono text-xs text-muted-foreground">{p.key}</span>
-              <span className="truncate">{p.name}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Users section */}
-      <button
-        type="button"
-        className="mt-3 flex w-full items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-muted"
-        onClick={() => setUsersOpen(!usersOpen)}
-      >
-        <span className="text-[10px]">{usersOpen ? '\u25BC' : '\u25B6'}</span>
-        Users
-      </button>
-      {usersOpen && (
-        <div className="ml-1">
-          {users.map((u) => (
-            <button
-              key={u.id}
-              type="button"
-              className={`flex w-full items-center rounded px-3 py-1 text-sm hover:bg-muted ${
-                selectedItem?.type === 'user' && selectedItem.data.id === u.id
-                  ? 'bg-primary/10 font-medium text-primary'
-                  : 'text-foreground'
-              }`}
-              onClick={() => onSelectUser(u)}
-            >
-              {u.displayName}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+function buildTreeData(projects: ProjectOption[], users: UserOption[]): TreeViewItem[] {
+  return [
+    { id: 'all-issues', name: 'All Issues', children: [] },
+    {
+      id: 'projects',
+      name: 'Projects',
+      children: projects.map((p) => ({
+        id: `project:${p.id}`,
+        name: p.name,
+      })),
+    },
+    {
+      id: 'users',
+      name: 'Users',
+      children: users.map((u) => ({
+        id: `user:${u.id}`,
+        name: u.displayName,
+      })),
+    },
+  ]
 }
 
 // ---------------------------------------------------------------------------
@@ -452,18 +380,33 @@ export default function HomePage() {
   // Tree handlers
   // -------------------------------------------------------------------------
 
-  function handleSelectProject(p: ProjectOption) {
-    setProjectFilter(p.id)
-    setSelectedItem({ type: 'project', data: p })
+  const treeData = buildTreeData(projects, users)
+
+  function handleTreeSelect(item: TreeViewItem) {
+    if (item.id === 'all-issues') {
+      setProjectFilter('all')
+      setSelectedItem(null)
+    } else if (item.id.startsWith('project:')) {
+      const projectId = item.id.slice('project:'.length)
+      const project = projects.find((p) => p.id === projectId)
+      if (project) {
+        setProjectFilter(project.id)
+        setSelectedItem({ type: 'project', data: project })
+      }
+    } else if (item.id.startsWith('user:')) {
+      const userId = item.id.slice('user:'.length)
+      const user = users.find((u) => u.id === userId)
+      if (user) {
+        setSelectedItem({ type: 'user', data: user })
+      }
+    }
   }
 
-  function handleSelectAllProjects() {
-    setProjectFilter('all')
-    setSelectedItem(null)
-  }
-
-  function handleSelectUser(u: UserOption) {
-    setSelectedItem({ type: 'user', data: u })
+  function getTreeSelectedId(): string | null {
+    if (selectedItem?.type === 'project') return `project:${selectedItem.data.id}`
+    if (selectedItem?.type === 'user') return `user:${selectedItem.data.id}`
+    if (projectFilter === 'all' && !selectedItem) return 'all-issues'
+    return null
   }
 
   function handleRowClick(row: IssueRow) {
@@ -589,14 +532,25 @@ export default function HomePage() {
       name="Issues"
       breadcrumbs={[{ label: 'GRIT' }, { label: 'Issues' }]}
       toolbox={
-        <TreePanel
-          projects={projects}
-          users={users}
-          activeProjectId={projectFilter}
-          selectedItem={selectedItem}
-          onSelectProject={handleSelectProject}
-          onSelectAllProjects={handleSelectAllProjects}
-          onSelectUser={handleSelectUser}
+        <TreeView
+          data={treeData}
+          selectedId={getTreeSelectedId()}
+          defaultExpandedIds={new Set(['projects', 'users'])}
+          onSelect={handleTreeSelect}
+          renderItem={(item) => {
+            const project = item.id.startsWith('project:')
+              ? projects.find((p) => p.id === item.id.slice('project:'.length))
+              : null
+            if (project) {
+              return (
+                <>
+                  <span className="mr-1.5 font-mono text-xs text-muted-foreground">{project.key}</span>
+                  <span className="truncate">{item.name}</span>
+                </>
+              )
+            }
+            return <span className="truncate">{item.name}</span>
+          }}
         />
       }
       contextPanel={<ContextPanelContent item={selectedItem} />}

@@ -71,6 +71,8 @@ export {
   SelectContent,
   SelectItem,
   FormField,
+  // Tree
+  TreeView,
 } from './components'
 export type {
   ShellProps,
@@ -93,6 +95,8 @@ export type {
   InputProps,
   TextareaProps,
   FormFieldProps,
+  TreeViewItem,
+  TreeViewProps,
 } from './components'
 
 // Adapter

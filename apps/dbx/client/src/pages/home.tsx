@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { View, useApi, ApiRequestError, DataGrid, Skeleton, Alert, AlertDescription } from '@datagrok/app-kit'
+import { View, useApi, ApiRequestError, DataGrid, Skeleton, Alert, AlertDescription, TreeView } from '@datagrok/app-kit'
+import type { TreeViewItem } from '@datagrok/app-kit'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,150 +27,35 @@ type Selection =
   | { level: 'table'; schema: string; table: string }
 
 // ---------------------------------------------------------------------------
-// Schema Tree (rendered in toolbox)
+// Tree data helpers (for Schema Tree in toolbox)
 // ---------------------------------------------------------------------------
 
-function SchemaTree({
-  schemas,
-  selection,
-  onSelectSchema,
-  onSelectTable,
-}: {
-  schemas: string[]
-  selection: Selection
-  onSelectSchema: (schema: string) => void
-  onSelectTable: (schema: string, table: string) => void
-}) {
-  const api = useApi()
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [tables, setTables] = useState<Record<string, TableInfo[]>>({})
-  const [columns, setColumns] = useState<Record<string, ColumnInfo[]>>({})
-  const [expandedTables, setExpandedTables] = useState<Record<string, boolean>>({})
-
-  function toggleSchema(schema: string) {
-    const isOpen = !expanded[schema]
-    setExpanded((prev) => ({ ...prev, [schema]: isOpen }))
-
-    if (isOpen && !tables[schema]) {
-      void api.get<TableInfo[]>(`/schemas/${schema}/tables`).then((data) => {
-        setTables((prev) => ({ ...prev, [schema]: data }))
-      })
-    }
-  }
-
-  function toggleTable(schema: string, table: string) {
-    const key = `${schema}.${table}`
-    const isOpen = !expandedTables[key]
-    setExpandedTables((prev) => ({ ...prev, [key]: isOpen }))
-
-    if (isOpen && !columns[key]) {
-      void api.get<ColumnInfo[]>(`/schemas/${schema}/tables/${table}/columns`).then((data) => {
-        setColumns((prev) => ({ ...prev, [key]: data }))
-      })
-    }
-  }
-
-  return (
-    <div className="p-2">
-      <div className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Schemas
-      </div>
-      {schemas.map((schema) => {
-        const isSchemaActive =
-          (selection.level === 'schema' && selection.schema === schema) ||
-          (selection.level === 'table' && selection.schema === schema)
-
-        return (
-          <div key={schema}>
-            {/* Schema row */}
-            <div className="flex items-center">
-              <button
-                type="button"
-                className="px-1 py-1 text-[10px] text-muted-foreground hover:text-foreground"
-                onClick={() => toggleSchema(schema)}
-              >
-                {expanded[schema] ? '\u25BC' : '\u25B6'}
-              </button>
-              <button
-                type="button"
-                className={`flex-1 rounded px-2 py-1 text-left text-sm hover:bg-muted ${
-                  selection.level === 'schema' && selection.schema === schema
-                    ? 'bg-primary/10 font-medium text-primary'
-                    : isSchemaActive
-                      ? 'font-medium text-foreground'
-                      : 'text-foreground'
-                }`}
-                onClick={() => onSelectSchema(schema)}
-              >
-                {schema}
-              </button>
-            </div>
-
-            {/* Tables under schema */}
-            {expanded[schema] && (
-              <div className="ml-3">
-                {!tables[schema] && (
-                  <div className="px-3 py-1 text-xs text-muted-foreground">Loading...</div>
-                )}
-                {tables[schema]?.map((t) => {
-                  const tableKey = `${schema}.${t.table_name}`
-                  const isTableActive =
-                    selection.level === 'table' &&
-                    selection.schema === schema &&
-                    selection.table === t.table_name
-
-                  return (
-                    <div key={t.table_name}>
-                      <div className="flex items-center">
-                        <button
-                          type="button"
-                          className="px-1 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
-                          onClick={() => toggleTable(schema, t.table_name)}
-                        >
-                          {expandedTables[tableKey] ? '\u25BC' : '\u25B6'}
-                        </button>
-                        <button
-                          type="button"
-                          className={`flex-1 rounded px-2 py-0.5 text-left text-sm hover:bg-muted ${
-                            isTableActive
-                              ? 'bg-primary/10 font-medium text-primary'
-                              : 'text-foreground'
-                          }`}
-                          onClick={() => onSelectTable(schema, t.table_name)}
-                        >
-                          <span className="font-mono text-xs">{t.table_name}</span>
-                        </button>
-                      </div>
-
-                      {/* Columns under table */}
-                      {expandedTables[tableKey] && (
-                        <div className="ml-5">
-                          {!columns[tableKey] && (
-                            <div className="px-2 py-0.5 text-xs text-muted-foreground">
-                              Loading...
-                            </div>
-                          )}
-                          {columns[tableKey]?.map((col) => (
-                            <div
-                              key={col.column_name}
-                              className="flex items-center gap-2 px-2 py-0.5 text-xs text-muted-foreground"
-                            >
-                              <span className="font-mono text-foreground">{col.column_name}</span>
-                              <span>{col.data_type}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
+function buildSchemaTreeData(
+  schemas: string[],
+  tables: Record<string, TableInfo[]>,
+  columns: Record<string, ColumnInfo[]>,
+): TreeViewItem[] {
+  return schemas.map((schema) => ({
+    id: `schema:${schema}`,
+    name: schema,
+    // undefined = not loaded yet, array = loaded
+    children: tables[schema]
+      ? tables[schema].map((t) => {
+          const tableKey = `${schema}.${t.table_name}`
+          return {
+            id: `table:${schema}.${t.table_name}`,
+            name: t.table_name,
+            children: columns[tableKey]
+              ? columns[tableKey].map((col) => ({
+                  id: `col:${tableKey}.${col.column_name}`,
+                  name: col.column_name,
+                  children: [] as TreeViewItem[],
+                }))
+              : undefined,
+          }
+        })
+      : undefined,
+  }))
 }
 
 // ---------------------------------------------------------------------------
@@ -278,6 +164,10 @@ export default function HomePage() {
   const [contextTables, setContextTables] = useState<TableInfo[]>([])
   const [contextColumns, setContextColumns] = useState<ColumnInfo[]>([])
 
+  // Tree lazy-load caches
+  const [treeTables, setTreeTables] = useState<Record<string, TableInfo[]>>({})
+  const [treeColumns, setTreeColumns] = useState<Record<string, ColumnInfo[]>>({})
+
   // -------------------------------------------------------------------------
   // Fetch schemas on mount
   // -------------------------------------------------------------------------
@@ -362,6 +252,78 @@ export default function HomePage() {
   )
 
   // -------------------------------------------------------------------------
+  // Tree handlers
+  // -------------------------------------------------------------------------
+
+  const treeData = buildSchemaTreeData(schemas, treeTables, treeColumns)
+
+  const handleTreeExpand = useCallback(
+    (item: TreeViewItem, expanded: boolean) => {
+      if (!expanded) return
+
+      if (item.id.startsWith('schema:')) {
+        const schema = item.id.slice('schema:'.length)
+        if (!treeTables[schema]) {
+          void apiRef.current.get<TableInfo[]>(`/schemas/${schema}/tables`).then((data) => {
+            setTreeTables((prev) => ({ ...prev, [schema]: data }))
+          })
+        }
+      } else if (item.id.startsWith('table:')) {
+        const tableKey = item.id.slice('table:'.length)
+        if (!treeColumns[tableKey]) {
+          const [schema, table] = tableKey.split('.')
+          void apiRef.current.get<ColumnInfo[]>(`/schemas/${schema}/tables/${table}/columns`).then((data) => {
+            setTreeColumns((prev) => ({ ...prev, [tableKey]: data }))
+          })
+        }
+      }
+    },
+    [treeTables, treeColumns],
+  )
+
+  const handleTreeSelect = useCallback(
+    (item: TreeViewItem) => {
+      if (item.id.startsWith('schema:')) {
+        handleSelectSchema(item.id.slice('schema:'.length))
+      } else if (item.id.startsWith('table:')) {
+        const key = item.id.slice('table:'.length)
+        const dotIdx = key.indexOf('.')
+        handleSelectTable(key.slice(0, dotIdx), key.slice(dotIdx + 1))
+      }
+    },
+    [handleSelectSchema, handleSelectTable],
+  )
+
+  function getTreeSelectedId(): string | null {
+    if (selection.level === 'schema') return `schema:${selection.schema}`
+    if (selection.level === 'table') return `table:${selection.schema}.${selection.table}`
+    return null
+  }
+
+  const renderTreeItem = useCallback(
+    (item: TreeViewItem) => {
+      if (item.id.startsWith('col:')) {
+        // Find the column info for data type display
+        const colParts = item.id.slice('col:'.length)
+        const lastDot = colParts.lastIndexOf('.')
+        const tableKey = colParts.slice(0, lastDot)
+        const col = treeColumns[tableKey]?.find((c) => c.column_name === item.name)
+        return (
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="font-mono text-foreground">{item.name}</span>
+            {col && <span>{col.data_type}</span>}
+          </span>
+        )
+      }
+      if (item.id.startsWith('table:')) {
+        return <span className="font-mono text-xs">{item.name}</span>
+      }
+      return <span className="truncate">{item.name}</span>
+    },
+    [treeColumns],
+  )
+
+  // -------------------------------------------------------------------------
   // Derived values
   // -------------------------------------------------------------------------
 
@@ -403,11 +365,12 @@ export default function HomePage() {
       name="Database Explorer"
       breadcrumbs={breadcrumbs}
       toolbox={
-        <SchemaTree
-          schemas={schemas}
-          selection={selection}
-          onSelectSchema={handleSelectSchema}
-          onSelectTable={handleSelectTable}
+        <TreeView
+          data={treeData}
+          selectedId={getTreeSelectedId()}
+          onSelect={handleTreeSelect}
+          onExpand={handleTreeExpand}
+          renderItem={renderTreeItem}
         />
       }
       contextPanel={
