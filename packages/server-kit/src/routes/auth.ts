@@ -7,7 +7,7 @@ import { users } from '@datagrok/core-schema'
 
 import type { AppVariables } from '../types.js'
 
-export function authRoutes(db: PostgresJsDatabase) {
+export function authRoutes(db: PostgresJsDatabase<Record<string, unknown>>) {
   const routes = new Hono<{ Variables: AppVariables }>()
 
   routes.get('/api/auth/me', async (c) => {

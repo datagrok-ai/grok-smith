@@ -1,0 +1,29 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": ".",
+    "paths": {
+      "@datagrok/app-kit": ["../packages/app-kit/src"],
+      "@datagrok/app-kit/*": ["../packages/app-kit/src/*"],
+      "@datagrok/core-schema": ["../packages/core-schema/src"],
+      "@datagrok/core-schema/*": ["../packages/core-schema/src/*"],
+      "@datagrok/server-kit": ["../packages/server-kit/src"],
+      "@datagrok/server-kit/*": ["../packages/server-kit/src/*"],
+      "@datagrok/send/client/*": ["../apps/send/client/src/*"],
+      "@datagrok/send/server/*": ["../apps/send/server/*"],
+      "@datagrok/grit/client/*": ["../apps/grit/client/src/*"],
+      "@datagrok/grit/server/*": ["../apps/grit/server/*"]
+    }
+  },
+  "include": ["client/src", "client/*.ts", "server"],
+  "references": [
+    { "path": "../packages/app-kit" },
+    { "path": "../packages/core-schema" },
+    { "path": "../packages/server-kit" },
+    { "path": "../apps/send" },
+    { "path": "../apps/grit" }
+  ]
+}

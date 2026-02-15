@@ -782,7 +782,7 @@ export default function HomePage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)} disabled={creating}>
+            <Button variant="secondary" onClick={() => setShowCreate(false)} disabled={creating}>
               Cancel
             </Button>
             <Button

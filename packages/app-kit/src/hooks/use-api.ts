@@ -1,4 +1,5 @@
 import { useDatagrok } from '../adapter/datagrok-provider'
+import { useApiBasePath } from './api-base-path'
 
 export interface ApiError {
   error: string
@@ -26,13 +27,14 @@ interface ApiMethods {
 
 /**
  * Thin wrapper around fetch for API calls.
- * Prefixes paths with /api, handles JSON, and throws structured errors.
+ * Prefixes paths with the API base path (default /api), handles JSON, and throws structured errors.
  */
 export function useApi(): ApiMethods {
   const { currentUser } = useDatagrok()
+  const basePath = useApiBasePath()
 
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const url = path.startsWith('/') ? `/api${path}` : `/api/${path}`
+    const url = path.startsWith('/') ? `${basePath}${path}` : `${basePath}/${path}`
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

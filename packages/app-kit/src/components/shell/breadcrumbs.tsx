@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import type { BreadcrumbItem } from './shell-types'
 
 interface BreadcrumbsProps {
@@ -11,9 +13,9 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         <span key={i} className="flex items-center gap-1">
           {i > 0 && <span className="text-border">/</span>}
           {item.href ? (
-            <a href={item.href} className="hover:text-foreground transition-colors">
+            <Link to={item.href} className="hover:text-foreground transition-colors">
               {item.label}
-            </a>
+            </Link>
           ) : (
             <span className={i === items.length - 1 ? 'text-foreground font-medium' : ''}>
               {item.label}

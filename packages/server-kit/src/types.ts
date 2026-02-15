@@ -10,4 +10,12 @@ export interface AppConfig {
   name: string
   /** Register app-specific routes on the Hono instance */
   configure?: (app: Hono<{ Variables: AppVariables }>) => void
+  /** CORS allowed origin (default: 'http://localhost:5173') */
+  corsOrigin?: string
+}
+
+export interface ServerAppDefinition {
+  id: string
+  name: string
+  routes: Hono<{ Variables: AppVariables }>
 }

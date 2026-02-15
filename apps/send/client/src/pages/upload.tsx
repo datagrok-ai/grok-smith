@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react'
 import {
   View,
   useDatagrok,
+  useApiBasePath,
   Button,
   Spinner,
   Alert,
@@ -23,6 +24,7 @@ type UploadState =
 
 export default function UploadPage() {
   const { currentUser } = useDatagrok()
+  const basePath = useApiBasePath()
   const [state, setState] = useState<UploadState>({ status: 'idle' })
   const [dragOver, setDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -35,7 +37,7 @@ export default function UploadPage() {
         const formData = new FormData()
         formData.append('file', file)
 
-        const res = await fetch('/api/studies/upload', {
+        const res = await fetch(`${basePath}/studies/upload`, {
           method: 'POST',
           headers: { 'X-User-Id': currentUser.id },
           body: formData,
@@ -55,7 +57,7 @@ export default function UploadPage() {
         })
       }
     },
-    [currentUser.id],
+    [currentUser.id, basePath],
   )
 
   const handleDrop = useCallback(

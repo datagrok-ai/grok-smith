@@ -13,11 +13,13 @@ and they share a core database schema with users, groups, security, etc.
 
 ```
 packages/
-  app-kit/           # Client UI components, theme, hooks (useApi, useCurrentUser)
+  app-kit/           # Client UI components, theme, hooks (useApi, useCurrentUser, ApiBasePath)
   core-schema/       # Drizzle tables + types for core Datagrok entities, auditColumns() helper
   server-kit/        # Server harness: createApp(), createDb(), standard middleware & routes
 apps/
   send/              # SEND nonclinical study app
+  grit/              # GRIT issue tracker app
+app-host/            # Unified SPA hosting all apps (icon strip + namespaced API routing)
 tools/
   create-app/        # Scaffolding tool for new apps
 ```
@@ -32,6 +34,16 @@ tools/
 - **Auth**: `X-User-Id` header validated as UUID by server-kit middleware, available as `c.var.userId` in Hono handlers.
 - **Well-known UUIDs**: Import `SYSTEM_USER_ID`, `ADMIN_USER_ID` from `@datagrok/core-schema` — never define local copies.
 
+## App registration
+
+Each app exports a **client definition** (`ClientAppDefinition`) and a **server definition** (`ServerAppDefinition`). The app-host loops over arrays of these to mount all apps automatically.
+
+- **Client**: `apps/<id>/client/src/app-definition.ts` → exports `{ id, name, icon, routes }`
+- **Server**: `apps/<id>/server/app-definition.ts` → exports `{ id, name, routes }` (Hono instance composing all route files)
+- **Package exports**: Each app's `package.json` exports `./client/app-definition` and `./server/app-definition`
+- **Routing convention**: The `id` drives all paths — `/api/${id}` for server, `/${id}/*` for client
+- **Adding a new app to app-host**: 2 imports + 2 array entries (one client, one server)
+
 ## Always
 - Use `<Shell>` + `<View>` from `@datagrok/app-kit` for app layout
 - Use `<DataGrid>` from `@datagrok/app-kit` for all tabular data (powered by AG Grid Community)
@@ -42,6 +54,7 @@ tools/
 - Define types in `/shared/schema.ts` using Drizzle, derive Zod and TS types from it
 - Run `npm run typecheck` and `npm run lint` before considering a task done
 - Keep shared/ as the single source of truth for types
+- Use relative URLs in app page links (e.g. `study/123`, `..`) so apps work in both standalone and app-host modes
 
 ## Never
 - Use `any` type

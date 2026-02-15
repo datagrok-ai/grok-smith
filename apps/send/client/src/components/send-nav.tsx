@@ -1,27 +1,28 @@
-import { Link, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { label: 'Studies', href: '/' },
-  { label: 'Upload', href: '/upload' },
+  { label: 'Studies', to: '.', end: true },
+  { label: 'Upload', to: 'upload', end: false },
 ]
 
 export function SendNav() {
-  const location = useLocation()
-
   return (
     <nav className="p-2">
       {NAV_ITEMS.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={`flex items-center rounded px-3 py-1.5 text-sm hover:bg-muted ${
-            location.pathname === item.href
-              ? 'bg-primary/10 font-medium text-primary'
-              : 'text-foreground'
-          }`}
+        <NavLink
+          key={item.label}
+          to={item.to}
+          end={item.end}
+          className={({ isActive }) =>
+            `flex items-center rounded px-3 py-1.5 text-sm hover:bg-muted ${
+              isActive
+                ? 'bg-primary/10 font-medium text-primary'
+                : 'text-foreground'
+            }`
+          }
         >
           {item.label}
-        </Link>
+        </NavLink>
       ))}
     </nav>
   )

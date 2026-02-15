@@ -158,7 +158,7 @@ export default function StudyPage() {
       name={study ? `Study: ${study.studyId}` : 'Study'}
       breadcrumbs={[
         { label: 'SEND' },
-        { label: 'Studies', href: '/' },
+        { label: 'Studies', href: '..' },
         { label: study?.studyId ?? '...' },
       ]}
       toolbox={<SendNav />}
@@ -176,7 +176,7 @@ export default function StudyPage() {
         {error && (
           <Alert variant="destructive" className="text-center">
             <AlertDescription>{error}</AlertDescription>
-            <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+            <Link to=".." className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
               Back to Studies
             </Link>
           </Alert>
@@ -202,7 +202,7 @@ export default function StudyPage() {
                 </div>
               </div>
               <Link
-                to="/"
+                to=".."
                 className="shrink-0 text-sm font-medium text-primary hover:underline"
               >
                 All Studies

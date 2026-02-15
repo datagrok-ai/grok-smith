@@ -3,11 +3,13 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "app-host"
   ],
   "scripts": {
     "dev:send": "npm run dev --workspace=apps/send",
     "dev:grit": "npm run dev --workspace=apps/grit",
+    "dev:app-host": "npm run dev --workspace=app-host",
     "typecheck": "tsc --build",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",

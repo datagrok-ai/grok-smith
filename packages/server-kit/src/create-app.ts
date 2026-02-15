@@ -19,7 +19,7 @@ export function createApp(config: AppConfig) {
   app.use(
     '*',
     cors({
-      origin: 'http://localhost:5173',
+      origin: config.corsOrigin ?? 'http://localhost:5173',
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowHeaders: ['Content-Type', 'X-User-Id', 'X-Request-Id'],
     }),

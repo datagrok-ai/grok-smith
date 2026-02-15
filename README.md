@@ -9,6 +9,8 @@ Every app in this repo is built and maintained with [Claude Code](https://docs.a
 | App | Description | Status |
 |-----|-------------|--------|
 | [SEND](apps/send/) | Viewer for CDISC SEND (Standard for Exchange of Nonclinical Data) datasets. Upload XPT/CSV nonclinical study data, browse studies, subjects, and domain findings (body weights, lab results, clinical observations, etc.) in interactive grids and charts. | In development |
+| [GRIT](apps/grit/) | Issue tracker with projects, issues, tree navigation, and context panel. | In development |
+| [App Host](app-host/) | Unified SPA hosting all apps with a shared icon strip and namespaced API routing. Runs SEND and GRIT side by side. | In development |
 
 ## Developer Tooling
 
@@ -64,8 +66,14 @@ npm install
 # Start the database
 npm run db:up
 
-# Run the SEND app
+# Run the SEND app (standalone)
 npm run dev:send
+
+# Run the GRIT app (standalone)
+npm run dev:grit
+
+# Run the App Host (all apps in one SPA)
+npm run dev:app-host
 ```
 
 ## Conventions

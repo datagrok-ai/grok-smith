@@ -34,7 +34,7 @@ function ShellInner({ appName, children }: ShellProps) {
   }, [handleKeyDown])
 
   return (
-    <div className="flex h-screen flex-col bg-background font-sans text-foreground">
+    <div className="flex h-full flex-col bg-background font-sans text-foreground">
       {/* Body: toolbox + view area + context panel */}
       <div className="flex flex-1 overflow-hidden">
         {/* Toolbox */}

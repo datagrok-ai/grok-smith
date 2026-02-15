@@ -111,7 +111,7 @@ export default function HomePage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={() => void navigate(`/study/${data.id}`)}>
+            <DropdownMenuItem onSelect={() => void navigate(`study/${data.id}`)}>
               Open
             </DropdownMenuItem>
             <DropdownMenuItem destructive onSelect={() => setDeleteTarget(data)}>
@@ -126,7 +126,7 @@ export default function HomePage() {
       headerName: 'Study ID',
       width: 140,
       cellRenderer: ({ data }: { data: StudyRow; value: unknown }) => (
-        <Link to={`/study/${data.id}`} className="font-medium text-primary hover:underline">
+        <Link to={`study/${data.id}`} className="font-medium text-primary hover:underline">
           {data.studyId}
         </Link>
       ),
@@ -174,7 +174,7 @@ export default function HomePage() {
       toolbox={<SendNav />}
       ribbon={
         <Button asChild>
-          <Link to="/upload">Upload Study</Link>
+          <Link to="upload">Upload Study</Link>
         </Button>
       }
       status={`${String(studies.length)} studies`}
@@ -207,7 +207,7 @@ export default function HomePage() {
             title="No studies yet"
             action={
               <Button asChild>
-                <Link to="/upload">Upload Your First Study</Link>
+                <Link to="upload">Upload Your First Study</Link>
               </Button>
             }
           />

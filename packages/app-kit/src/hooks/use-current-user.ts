@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { useApi } from './use-api'
+import { useDatagrok } from '../adapter/datagrok-provider'
 
 interface CurrentUser {
   id: string
@@ -21,10 +21,11 @@ interface UseCurrentUserResult {
 
 /**
  * Fetches the current user from `GET /api/auth/me` (provided by server-kit).
- * Returns loading/error state and the typed user object.
+ * Uses raw fetch to `/api/auth/me` instead of useApi so auth is always at the
+ * root, not scoped per app in platform mode.
  */
 export function useCurrentUser(): UseCurrentUserResult {
-  const api = useApi()
+  const { currentUser } = useDatagrok()
   const [user, setUser] = useState<CurrentUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -33,14 +34,23 @@ export function useCurrentUser(): UseCurrentUserResult {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get<CurrentUser>('/auth/me')
+      const res = await fetch('/api/auth/me', {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': currentUser.id,
+        },
+      })
+      if (!res.ok) {
+        throw new Error(`Failed to fetch current user (${String(res.status)})`)
+      }
+      const data = (await res.json()) as CurrentUser
       setUser(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch current user')
     } finally {
       setLoading(false)
     }
-  }, [api])
+  }, [currentUser.id])
 
   useEffect(() => {
     void fetchUser()
