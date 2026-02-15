@@ -3,8 +3,9 @@ import { createApp, createDb, authRoutes } from '@datagrok/server-kit'
 
 import { sendServerApp } from '@datagrok/send/server/app-definition'
 import { gritServerApp } from '@datagrok/grit/server/app-definition'
+import { dbxServerApp } from '@datagrok/dbx/server/app-definition'
 
-const apps = [sendServerApp, gritServerApp]
+const apps = [sendServerApp, gritServerApp, dbxServerApp]
 
 const db = createDb({ schema: {} })
 
