@@ -14,6 +14,7 @@ Read before any work:
 - Update STATUS.md when completing features
 
 ## Harness usage
+- Non-UI client infrastructure (auth context, API hooks, permissions) comes from `@datagrok/app-core` (also re-exported by `@datagrok/app-kit`)
 - Server entry (`server/index.ts`) uses `createApp()` from `@datagrok/server-kit` — do not add manual CORS, logging, or health routes
 - DB client (`server/db/client.ts`) uses `createDb()` from `@datagrok/server-kit` — do not hardcode connection strings
 - Use `auditColumns()` from `@datagrok/core-schema` on entity tables (top-level things users create/own) — provides `id`, `created_at`, `updated_at`, `created_by` (FK → `users.id`). Detail/child tables only need `id`.

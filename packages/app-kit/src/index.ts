@@ -99,19 +99,12 @@ export type {
   TreeViewProps,
 } from './components'
 
-// Adapter
-export { DatagrokProvider, useDatagrok, createDatagrokAdapter } from './adapter'
-export type { DatagrokContext, DatagrokUser } from './adapter'
-
-// Mock
-export { createMockAdapter, mockUsers, ADMIN_USER_ID, SYSTEM_USER_ID } from './mock'
-
-// Hooks
-export { useApi, ApiRequestError, useCurrentUser, ApiBasePath, useApiBasePath } from './hooks'
-export type { ApiError } from './hooks'
-
-// Types
-export type { ClientAppDefinition } from './types'
-
-// Domain
-export type { User } from './domain'
+// Re-export app-core for convenience (apps can import from either)
+export {
+  DatagrokProvider, useDatagrok, createDatagrokAdapter,
+  createMockAdapter, mockUsers, ADMIN_USER_ID, SYSTEM_USER_ID,
+  useApi, ApiRequestError, useCurrentUser, ApiBasePath, useApiBasePath,
+} from '@datagrok/app-core'
+export type {
+  DatagrokContext, DatagrokUser, ApiError, ClientAppDefinition, User,
+} from '@datagrok/app-core'

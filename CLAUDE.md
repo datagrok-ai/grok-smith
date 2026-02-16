@@ -13,7 +13,8 @@ and they share a core database schema with users, groups, security, etc.
 
 ```
 packages/
-  app-kit/           # Client UI components, theme, hooks (useApi, useCurrentUser, ApiBasePath)
+  app-core/          # Non-UI client infrastructure: auth context, API hooks, mock adapters, permissions
+  app-kit/           # Client UI components, theme (re-exports app-core for convenience)
   core-schema/       # Drizzle tables + types for core Datagrok entities, auditColumns() helper
   server-kit/        # Server harness: createApp(), createDb(), standard middleware & routes
 apps/

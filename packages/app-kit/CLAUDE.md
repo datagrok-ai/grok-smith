@@ -1,6 +1,6 @@
 # @datagrok/app-kit
 
-Client-side UI library for grok-smith apps. Provides components, theme, hooks, and a mock adapter for local development.
+Client-side UI library for grok-smith apps. Provides components and theme. Non-UI infrastructure (auth context, API hooks, mock adapters) lives in `@datagrok/app-core` and is re-exported from here for convenience.
 
 For full conventions, see `/docs/CODING.md`, `/docs/DATABASE.md`, `/docs/DESIGN.md`.
 

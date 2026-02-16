@@ -19,6 +19,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@datagrok/app-core": ["./packages/app-core/src"],
+      "@datagrok/app-core/*": ["./packages/app-core/src/*"],
       "@datagrok/app-kit": ["./packages/app-kit/src"],
       "@datagrok/app-kit/*": ["./packages/app-kit/src/*"],
       "@datagrok/core-schema": ["./packages/core-schema/src"],

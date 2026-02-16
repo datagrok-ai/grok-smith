@@ -6,6 +6,8 @@
     "outDir": "dist",
     "rootDir": ".",
     "paths": {
+      "@datagrok/app-core": ["../../packages/app-core/src"],
+      "@datagrok/app-core/*": ["../../packages/app-core/src/*"],
       "@datagrok/app-kit": ["../../packages/app-kit/src"],
       "@datagrok/app-kit/*": ["../../packages/app-kit/src/*"],
       "@datagrok/core-schema": ["../../packages/core-schema/src"],
@@ -16,6 +18,7 @@
   },
   "include": ["client/src", "client/*.ts", "server", "shared"],
   "references": [
+    { "path": "../../packages/app-core" },
     { "path": "../../packages/app-kit" },
     { "path": "../../packages/core-schema" },
     { "path": "../../packages/server-kit" }

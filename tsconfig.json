@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "packages/app-core" },
     { "path": "packages/app-kit" },
     { "path": "packages/core-schema" },
     { "path": "packages/server-kit" },

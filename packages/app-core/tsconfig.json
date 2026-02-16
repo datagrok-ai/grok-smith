@@ -6,8 +6,5 @@
     "outDir": "dist",
     "noEmit": false
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../app-core" }
-  ]
+  "include": ["src"]
 }
