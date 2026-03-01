@@ -1,9 +1,18 @@
 # Design Conventions
 
+For details on colors, components etc, read DESIGN-SYSTEM.md
+
 ## General
 - All apps must feel like part of Datagrok — consistent spacing, colors, typography
 - Use @datagrok/app-kit components as the primary building blocks
 - Underneath, app-kit uses Shadcn/ui — never import Shadcn directly in app code
+
+## Philosophy
+- Information-dense, optimized for desktop
+- View-specific actions show in ribbon
+- Click on an object to reveal details in the context panel
+- Right-click on an object for the context menu
+- Clean, uncluttered work surface, with icons for actions and settings appearing when you hover over a panel
 
 ## App Layout
 - Every app uses `<Shell appName="...">` from app-kit, wrapping the router in App.tsx.
