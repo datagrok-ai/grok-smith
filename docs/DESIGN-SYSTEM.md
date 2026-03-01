@@ -19,93 +19,96 @@ Grok Smith apps are **pharma/biotech enterprise tools**. The UI must:
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Components | `shadcn/ui` | Primitives only (Button, Dialog, Toast). Restyle to match Datagrok. |
-| Styling | `Tailwind CSS` | Use `@grok-smith/tailwind-config` preset |
-| Data Grid | `ag-grid-react` + `ag-grid-community` | **ONLY** grid component. NEVER build custom tables. |
+| Components | `@datagrok/app-kit` | Wraps shadcn/ui + Radix primitives. Never import shadcn directly. |
+| Styling | `Tailwind CSS` | Use `@datagrok/app-kit/theme/tailwind-preset` preset + `@datagrok/app-kit/theme/tokens.css` |
+| Data Grid | `ag-grid-react` + `ag-grid-community` | **ONLY** grid component. NEVER build custom tables. Wrapped by `<DataGrid>` from app-kit. |
 | Icons | `lucide-react` | Consistent icon set |
 | Charts | `recharts` | When visualization is needed |
 | Forms | `react-hook-form` + `zod` | Validation and form state |
 
 ### What NOT to use
-- ❌ Custom table/grid components — use AG Grid exclusively
-- ❌ Material UI, Ant Design, Chakra — use shadcn/ui restyled to Datagrok
+- ❌ Custom table/grid components — use `<DataGrid>` from app-kit (AG Grid underneath)
+- ❌ Material UI, Ant Design, Chakra — use `@datagrok/app-kit` components
+- ❌ Direct shadcn/ui imports — always import from `@datagrok/app-kit`
 - ❌ CSS modules or styled-components — Tailwind only
 - ❌ Dark sidebars or dark themes — Datagrok uses LIGHT panels
-- ❌ Blue selection highlighting — Datagrok uses GREEN selection
-- ❌ Label-above form layouts — Datagrok uses label-LEFT, input-RIGHT
-- ❌ Filled dialog buttons — Datagrok uses text-style CANCEL/OK buttons
 - ❌ Uppercase column headers — Datagrok uses normal-case headers
 - ❌ Decorative gradients, heavy shadows, or animations
 
 ---
 
-## Color System (from Datagrok screenshots)
+## Color System
+
+Colors are defined as CSS custom properties in `@datagrok/app-kit/theme/tokens.css` and mapped to Tailwind tokens via `@datagrok/app-kit/theme/tailwind-preset`. Never hardcode color values — use the Tailwind classes.
+
+### Core Palette
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-primary` | `text-primary`, `bg-primary` | #2196f3 | Datagrok brand, links, focus rings |
+| `--color-primary-hover` | `bg-primary-hover` | #1976d2 | Button/link hover |
+| `--color-primary-light` | `bg-primary-light` | #e3f2fd | Selected row bg, active highlight |
+| `--color-primary-foreground` | `text-primary-foreground` | #ffffff | Text on primary backgrounds |
 
 ### Backgrounds
-| Token | Value | Usage |
-|-------|-------|-------|
-| `gs-bg` | #FFFFFF | Content areas, panels, tree panel |
-| `gs-bgAlt` | #F5F6F8 | Headers, toolbars, column headers, panel headers |
-| `gs-bgMuted` | #FAFBFC | Alternating grid rows |
-| `gs-bgSelect` | #E8F5E9 | **Selected row (GREEN!)** |
-| `gs-bgActive` | #E3EDF7 | Active tree item, active nav highlight |
-| `gs-iconStrip` | #3D4F5F | Far-left Datagrok icon strip (dark slate) |
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-background` | `bg-background` | #ffffff | Content areas, panels |
+| `--color-muted` | `bg-muted` | #f5f5f5 | Headers, toolbars, column headers |
+| `--color-neutral-50` | `bg-neutral-50` | #fafafa | Row hover, alternating rows |
+| `--color-accent` | `bg-accent` | #f5f5f5 | Subtle highlight |
 
 ### Text
-| Token | Value | Usage |
-|-------|-------|-------|
-| `gs-text` | #2D3748 | Primary text, headings, cell values |
-| `gs-textSec` | #4A5568 | Column headers, form labels, section headers |
-| `gs-textTer` | #718096 | Accordion headers, tree icons, helper text |
-| `gs-textMuted` | #A0AEC0 | Placeholders, counts, disabled text |
-| `gs-link` | #2B6CB0 | Links, clickable IDs (deeper blue than typical) |
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-foreground` | `text-foreground` | #212121 | Primary text, headings, cell values |
+| `--color-muted-foreground` | `text-muted-foreground` | #757575 | Column headers, form labels, section headers |
+| `--color-neutral-500` | `text-neutral-500` | #9e9e9e | Placeholders, disabled text |
 
 ### Semantic / Action Colors
-| Token | Value | Usage |
-|-------|-------|-------|
-| `gs-success` | #48BB78 | Green — SAVE button, success states |
-| `gs-successBg` | #C6F6D5 | Success badge/notification background |
-| `gs-warning` | #D69E2E | Warning states |
-| `gs-warningBg` | #FEFCBF | Warning badge/notification background |
-| `gs-danger` | #E53E3E | Errors, destructive actions |
-| `gs-dangerBg` | #FED7D7 | Error badge/notification background |
-| `gs-info` | #3182CE | Informational states |
-| `gs-infoBg` | #BEE3F8 | Info badge/notification background |
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-success` | `text-success`, `bg-success` | #4caf50 | Success states |
+| `--color-warning` | `text-warning`, `bg-warning` | #ff9800 | Warning states |
+| `--color-destructive` | `text-destructive`, `bg-destructive` | #f44336 | Errors, destructive actions |
+| `--color-info` | `text-info`, `bg-info` | #2196f3 | Informational states |
 
 ### Borders
-| Token | Value | Usage |
-|-------|-------|-------|
-| `gs-borderLight` | #EDF2F7 | Between grid rows, inner dividers |
-| `gs-border` | #E2E8F0 | Panel borders, main dividers |
-| `gs-borderStr` | #CBD5E0 | Outer borders, strong dividers |
-| `gs-borderSel` | #A5D6A7 | Selected row border (green) |
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-border` | `border-border` | #e0e0e0 | Panel borders, grid borders, dividers |
+| `--color-input` | `border-input` | #e0e0e0 | Input borders |
 
-### Badge / Status Variants
-- **Active/Success:** `bg: #C6F6D5, text: #276749`
-- **Pending/Warning:** `bg: #FEFCBF, text: #744210`
-- **Error/Failed:** `bg: #FED7D7, text: #9B2C2C`
-- **Default/Inactive:** `bg: #EDF2F7, text: #4A5568`
-- **Info:** `bg: #BEE3F8, text: #2A4365`
+### Status Colors (for `<Badge>` variants)
+| CSS Variable | Tailwind Class | Value | Usage |
+|-------------|---------------|-------|-------|
+| `--color-status-draft` | `text-status-draft` | #9e9e9e | Draft status |
+| `--color-status-active` | `text-status-active` | #2196f3 | Active status |
+| `--color-status-approved` | `text-status-approved` | #4caf50 | Approved status |
+| `--color-status-rejected` | `text-status-rejected` | #f44336 | Rejected status |
+| `--color-status-archived` | `text-status-archived` | #bdbdbd | Archived status |
+
+### Neutral Scale
+Full scale available: `neutral-50` through `neutral-900` (mapped from `--color-neutral-*`). Use for fine-grained grays.
 
 ---
 
 ## Typography
 
-**Font:** `-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
-**Mono:** `'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace`
+**Font (--font-sans):** `'Inter', system-ui, -apple-system, sans-serif`
+**Mono (--font-mono):** `'JetBrains Mono', 'Fira Code', monospace`
 
 ### Scale (strict)
 
 | Role | Class | Size | Weight | Color | Example |
 |------|-------|------|--------|-------|---------|
-| Entity/page title | `text-sm font-semibold` | 14px | 600 | gs-text | Breadcrumb title, panel title |
-| Body / cell values | `text-sm` | 14px | 400 | gs-text | Grid cells, form values |
-| Column headers | `text-xs font-medium` | 12px | 500 | gs-textSec | AG Grid headers (NOT uppercase!) |
-| Form labels | `text-sm` | 14px | 400 | gs-textSec | Left-side form labels |
-| Section headers | `text-xs font-semibold` | 12px | 600 | gs-textSec | Accordion section titles |
-| Helper / metadata | `text-xs` | 12px | 400 | gs-textTer | Status bar, counts, timestamps |
-| Muted / counts | `text-xs` | 12px | 400 | gs-textMuted | Row counts, disabled states |
-| Monospace data | `text-xs font-mono` | 12px | 400 | gs-text | SMILES, IDs, MW, formulas |
+| Entity/page title | `text-sm font-semibold` | 14px | 600 | `text-foreground` | Breadcrumb title, panel title |
+| Body / cell values | `text-sm` | 14px | 400 | `text-foreground` | Grid cells, form values |
+| Column headers | `text-xs font-medium` | 12px | 500 | `text-muted-foreground` | AG Grid headers (NOT uppercase!) |
+| Form labels | `text-sm` | 14px | 400 | `text-muted-foreground` | Form labels (above inputs) |
+| Section headers | `text-xs font-semibold` | 12px | 600 | `text-muted-foreground` | Accordion section titles |
+| Helper / metadata | `text-xs` | 12px | 400 | `text-muted-foreground` | Status bar, counts, timestamps |
+| Muted / counts | `text-xs` | 12px | 400 | `text-neutral-500` | Row counts, disabled states |
+| Monospace data | `text-xs font-mono` | 12px | 400 | `text-foreground` | SMILES, IDs, MW, formulas |
 
 ### Critical Rules
 - **text-base (16px) and above:** NEVER use in app UI content
@@ -117,116 +120,169 @@ Grok Smith apps are **pharma/biotech enterprise tools**. The UI must:
 
 ## Layout Architecture
 
-### Datagrok's Four-Zone Pattern
+### Shell + View Pattern
+
+Every app uses `<Shell appName="...">` from `@datagrok/app-kit`, wrapping the router. Each page uses `<View>` to declare its slot content. The Shell conditionally renders panels based on which slots the current View provides.
 
 ```
-┌──┬────────────┬─────────────────────────────────────┬────────────┐
-│  │ Tree/Nav   │ Content Area                        │ Context    │
-│I │ Panel      │                                     │ Panel      │
-│c │            │ ┌─────────────────────────────────┐  │            │
-│o │ ▸ Section  │ │ Top Bar (nav + breadcrumb + save)│  │ Entity     │
-│n │   item     │ ├─────────────────────────────────┤  │ ▾ Details  │
-│  │   item     │ │                                 │  │   l: v     │
-│S │   item     │ │                                 │  │   l: v     │
-│t │ ▸ Section  │ │     Grid / Content              │  │ ▸ Props    │
-│r │   item     │ │                                 │  │ ▸ Desc.    │
-│i │            │ │                                 │  │ ▸ Biology  │
-│p │            │ │                                 │  │ ▾ DBs      │
-│  │            │ ├─────────────────────────────────┤  │   l: v     │
-│  │ [Toolbox]  │ │ Status Bar (name + cols + rows) │  │   l: v     │
-│⚙ │ [Browse ]  │ └─────────────────────────────────┘  │            │
-└──┴────────────┴─────────────────────────────────────┴────────────┘
- 28    200px              flexible                        280px
+┌────────────┬─────────────────────────────────────┬────────────┐
+│ Toolbox    │ View Content                        │ Context    │
+│ (200px)    │ ┌───────────────────────────────────┤ Panel      │
+│            │ │ Header: Breadcrumbs | Ribbon      │ (280px)    │
+│ ▸ Section  │ ├───────────────────────────────────┤            │
+│   item     │ │                                   │ Accordion  │
+│   item     │ │     Main Content                  │ Sections   │
+│ ▸ Section  │ │     (no padding — views control)  │ label: val │
+│   item     │ │                                   │ label: val │
+│            │ ├───────────────────────────────────┤            │
+│            │ │ Status Bar (24px)                 │            │
+└────────────┴───────────────────────────────────────┴────────────┘
+  160–400px            flexible                       200–500px
 ```
 
-### Standalone vs Embedded
+### View Slot Props
 
-**Standalone (outside Datagrok):** Omit the icon strip. Tree panel = app sidebar. Rest identical.
-**Embedded in Datagrok:** Datagrok provides icon strip + may replace tree panel. Content + context panel must work independently.
+Each `<View>` provides optional slot props that the Shell renders:
 
-### Component Specs
+```tsx
+<View
+  name="Studies"
+  breadcrumbs={[{ label: 'Studies' }]}
+  toolbox={<SendNav />}           // Left sidebar content
+  ribbon={<Button>+ New</Button>} // Top-right actions
+  contextPanel={<DetailPanel />}  // Right sidebar
+  status="42 studies"             // Status bar text
+>
+  <DataGrid ... />                // Main content area
+</View>
+```
 
-**Tree/Nav Panel (200px):** White bg, right border #E2E8F0. Collapsible sections (▸/▾). Active item: bg #E3EDF7, text #2B6CB0. Bottom tabs pattern ("Toolbox | Browse").
+- **toolbox**: Left sidebar (resizable, 160–400px). Toggle: Ctrl+B or status bar icon.
+- **ribbon**: Top-right action area (buttons, toolbar icons).
+- **contextPanel**: Right sidebar (resizable, 200–500px). Toggle: Ctrl+I or status bar icon.
+- **breadcrumbs**: `BreadcrumbItem[]` — `{ label, href }`. Last item is current page (bold).
+- **status**: Status bar text. Three zones: operation result | view summary | toggle icons.
 
-**Top Bar (~32px):** Bg #F5F6F8, bottom border. Left: nav icons + breadcrumb (segments / separated, last bold, others blue links). Right: SAVE (green filled) + toolbar icons (ghost).
+### Layout Specs
 
-**Context Panel (280px):** White bg, left border. Accordion sections with ▸/▾. Label:value pairs (flex justify-between). Labels: text-xs #718096. Values: text-xs #2D3748 (or #2B6CB0 if link).
+**Toolbox (left sidebar):** White bg (`bg-background`), right border. Collapsible sections. Active item highlighted with `bg-primary-light`. Typically uses `<TreeView>` for navigation.
 
-**Status Bar (~28px):** Bg #F5F6F8, top border. Left: entity name + "Columns: N" + "Rows: N". Right: view toggle icons. Text-xs #718096.
+**Header (~40px):** Breadcrumbs on the left, ribbon controls on the right.
+
+**Context Panel (right sidebar):** White bg, left border. Accordion sections with ▸/▾. Label:value pairs. Labels: `text-xs text-muted-foreground`. Values: `text-xs text-foreground`.
+
+**Status Bar (24px):** `bg-muted`, top border. Left: operation result. Center: view summary. Right: toolbox/context panel toggle icons + fullscreen.
 
 ---
 
 ## AG Grid Configuration
 
-### Theme: `ag-theme-grok-smith`
+Use `<DataGrid>` from `@datagrok/app-kit` — it wraps AG Grid Community with the Datagrok theme applied automatically. The theme CSS is in `@datagrok/app-kit/theme/ag-grid-theme.css`.
+
+### Theme: `ag-theme-datagrok`
 
 ```css
-.ag-theme-grok-smith {
-  --ag-header-height: 32px;
-  --ag-row-height: 32px;
-  --ag-font-size: 13px;
-  --ag-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --ag-header-background-color: #F5F6F8;
-  --ag-header-foreground-color: #4A5568;
-  --ag-odd-row-background-color: #FFFFFF;
-  --ag-even-row-background-color: #FAFBFC;
-  --ag-row-hover-color: #F0FFF4;
-  --ag-selected-row-background-color: #E8F5E9;   /* GREEN! */
-  --ag-range-selection-border-color: #A5D6A7;
-  --ag-border-color: #E2E8F0;
-  --ag-row-border-color: #EDF2F7;
-  --ag-header-column-separator-color: #E2E8F0;
-  --ag-cell-horizontal-padding: 12px;
+.ag-theme-datagrok {
+  --ag-header-background-color: var(--color-muted);          /* #f5f5f5 */
+  --ag-header-foreground-color: var(--color-muted-foreground); /* #757575 */
+  --ag-header-cell-hover-background-color: var(--color-neutral-200);
+  --ag-background-color: var(--color-background);             /* #ffffff */
+  --ag-row-hover-color: var(--color-neutral-50);              /* #fafafa */
+  --ag-selected-row-background-color: var(--color-primary-light); /* #e3f2fd */
+  --ag-font-family: var(--font-sans);
+  --ag-font-size: var(--text-sm);                             /* 0.875rem */
+  --ag-border-color: var(--color-border);                     /* #e0e0e0 */
+  --ag-row-border-color: var(--color-border);
+  --ag-wrapper-border-radius: var(--radius-lg);
+  --ag-cell-horizontal-padding: 16px;
+  --ag-range-selection-border-color: var(--color-primary);    /* #2196f3 */
 }
 ```
 
-**Key rules:** Selection is GREEN. Headers are normal-case. Column borders are subtle. NEVER build custom tables.
+**Key rules:** All values reference CSS custom properties from `tokens.css` for consistency. Headers are normal-case. Column borders are subtle. NEVER build custom tables — always use `<DataGrid>`.
 
 ---
 
-## Forms & Dialogs (Datagrok Style)
+## Forms & Dialogs
 
-### Form Layout: LABEL-LEFT, INPUT-RIGHT
+### Form Layout: Labels Above Inputs
 
-```
-     Table │ smiles        ▼  ↗ 📋 📋
-  Molecules │ canonical_smiles  ▼
-  Threshold │ 0.55________________________
-Fprint type │ Morgan           ▼
-```
+Use `<FormField>` from `@datagrok/app-kit` for label + input + error wrapper. Use `<Label>`, `<Input>`, `<Textarea>`, `<Select>` for individual controls.
 
-**Labels:** LEFT of input, right-aligned, min-width 120px, text-sm, color #4A5568
-**Inputs:** Underline only (border-bottom), bg-transparent, text-sm, color #2D3748
-**Selects:** Same underline style + optional action icons (↗, 📋) to the right
-**Focus:** border-bottom turns #2B6CB0
-**Error:** border-bottom turns #E53E3E + text-xs error below
+**Labels:** Above input, `text-sm text-muted-foreground`. Required fields show a red asterisk.
+**Inputs:** Bordered (`border-input`), `bg-background`, `text-sm text-foreground`.
+**Validation errors:** Inline below the field, red text (`text-destructive`).
+**Group related fields** with section headings. Save/Cancel buttons at bottom of form.
 
 ### Dialog Structure
-- Header: title (text-sm font-semibold), border-bottom
-- Body: label-left fields, py-1 spacing (compact)
-- Footer: ↻ reset (left) + CANCEL / OK text buttons (right)
-- Buttons: **text-style**, uppercase, font-semibold, color #2B6CB0. NO filled buttons.
 
-### Button Types Across the App
-| Context | Style | Example |
+Use `<Dialog>` + `<DialogContent>`, `<DialogHeader>`, `<DialogTitle>`, `<DialogFooter>` from `@datagrok/app-kit`.
+
+- Header: title (`text-sm font-semibold`), border-bottom
+- Body: form fields with standard spacing
+- Footer: Cancel (secondary) + primary action button (right-aligned)
+
+### Destructive Actions
+
+Use `<AlertDialog>` for destructive confirmations. Require the user to see the name of what they're deleting.
+
+### Button Variants
+
+The `<Button>` component supports these variants:
+
+| Variant | Usage | Example |
 |---------|-------|---------|
-| Dialog actions | Text (CANCEL/OK) | `CANCEL  OK` |
-| Save action (top bar) | Green filled | `💾 SAVE` |
-| Primary page action | Green filled | `➕ NEW` |
-| Toolbar | Ghost icons | `⊞ ⊟ ▦ ☰` |
-| Secondary | Outlined | `Export` |
+| `default` (primary) | Primary actions | Save, Create, Submit |
+| `secondary` | Secondary actions | Cancel, Export |
+| `ghost` | Toolbar icons, subtle actions | Icon buttons in ribbon |
+| `destructive` | Destructive actions | Delete |
+
+Sizes: `sm`, `md` (default), `icon` (square, for icon-only buttons).
 
 ---
 
-## Shared Package (`@grok-smith/ui`)
+## Package: `@datagrok/app-kit`
+
+All UI components are imported from `@datagrok/app-kit`. It re-exports `@datagrok/app-core` (auth, hooks, permissions) for convenience.
 
 ```typescript
-// Layouts
-export { AppShell, TopBar, TreePanel, ContextPanel, StatusBar }
+// Layout
+import { Shell, View, useShell } from '@datagrok/app-kit'
+
+// Display
+import { Button, Badge, Card, Alert, Skeleton, Spinner, EmptyState } from '@datagrok/app-kit'
+
 // Data
-export { DataGrid, EmptyState }
-// Primitives (restyled for Datagrok)
-export { DgButton, DgInput, DgSelect, DgDialog, Badge }
+import { DataGrid } from '@datagrok/app-kit'
+
+// Dialogs & Menus
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@datagrok/app-kit'
+import { AlertDialog, AlertDialogContent, AlertDialogAction, AlertDialogCancel } from '@datagrok/app-kit'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@datagrok/app-kit'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@datagrok/app-kit'
+
+// Form
+import { Label, Input, Textarea, Select, SelectTrigger, SelectContent, SelectItem, FormField } from '@datagrok/app-kit'
+
+// Navigation
+import { TreeView } from '@datagrok/app-kit'
+
+// Infrastructure (re-exported from @datagrok/app-core)
+import { useApi, useCurrentUser, useCanDo, DatagrokProvider } from '@datagrok/app-kit'
+
+// Utility
+import { cn } from '@datagrok/app-kit'  // clsx + tailwind-merge
+```
+
+### Theme Exports
+
+```typescript
+// In tailwind.config.ts:
+import datagrokPreset from '@datagrok/app-kit/theme/tailwind-preset'
+
+// In CSS:
+@import '@datagrok/app-kit/theme/tokens.css';
+@import '@datagrok/app-kit/theme/ag-grid-theme.css';
 ```
 
 ---
@@ -234,22 +290,29 @@ export { DgButton, DgInput, DgSelect, DgDialog, Badge }
 ## Checklist for AI-Generated Apps
 
 **Layout:**
-- [ ] Tree panel + content + context panel (NO dark sidebar)
-- [ ] Top bar with breadcrumb + green SAVE + toolbar icons
-- [ ] Context panel: accordion sections (▸/▾), label:value pairs
-- [ ] Status bar: entity + columns + rows
+- [ ] `<Shell appName="...">` wrapping router
+- [ ] Each page uses `<View>` with appropriate slot props
+- [ ] Toolbox (left sidebar) for navigation, context panel (right) for details
+- [ ] Status bar with view summary
+- [ ] NO dark sidebars — all panels are light
 
 **Grid:**
-- [ ] AG Grid only (NEVER custom tables)
-- [ ] Selection: GREEN (#E8F5E9)
+- [ ] `<DataGrid>` from `@datagrok/app-kit` only (NEVER custom tables)
 - [ ] Headers: normal case, NOT uppercase
+- [ ] Show `created_at` and `created_by` in list views
 
 **Forms:**
-- [ ] Label-LEFT, input-RIGHT (NOT label above)
-- [ ] Underline inputs (border-bottom only)
-- [ ] Dialog buttons: text-style CANCEL/OK
-- [ ] Reset icon ↻ bottom-left
+- [ ] Labels above inputs, using `<FormField>` or `<Label>` + `<Input>`
+- [ ] Required fields: red asterisk
+- [ ] Validation errors: inline below field, `text-destructive`
+- [ ] Destructive actions: `<AlertDialog>` with explicit name
 
 **Colors:**
-- [ ] Selection: GREEN  |  Links: #2B6CB0  |  Save: #48BB78
-- [ ] Light panels, #F5F6F8 headers, no dark sidebars
+- [ ] Never hardcode colors — use Tailwind classes from app-kit theme
+- [ ] `bg-muted` for headers/toolbars, `bg-background` for content panels
+- [ ] Status badges use `<Badge variant="...">` with predefined variants
+
+**Imports:**
+- [ ] All components from `@datagrok/app-kit` — never from shadcn or Radix directly
+- [ ] `useApi()` for API calls, `useCurrentUser()` for auth
+- [ ] `cn()` for composing Tailwind classes
