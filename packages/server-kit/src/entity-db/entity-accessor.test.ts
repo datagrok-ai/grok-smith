@@ -48,8 +48,6 @@ function makeAccessor(
   return createEntityAccessor(db, {
     table: widgets,
     tableName: 'test_widgets',
-    accessorName: 'testWidgets',
-    columns: [],
     entityTypeName: TEST_ENTITY_TYPE.name,
   }, () => userContext)
 }

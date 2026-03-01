@@ -13,16 +13,18 @@ export type { AppConfig, AppVariables, ServerAppDefinition } from './types.js'
 export {
   canDo,
   isAdmin,
+  batchCheckPermissions,
   PermissionDeniedError,
   grantPermission,
   revokePermission,
   userGroupsCTE,
   userGroupsSubquery,
   registerEntityType,
+  STANDARD_PERMISSIONS,
   visibleEntitiesSql,
   isAdminSql,
 } from './permissions/index.js'
-export type { UserContext, PermissionCheckResult } from './permissions/index.js'
+export type { UserContext, PermissionCheckResult, PermissionName } from './permissions/index.js'
 
 // Entity DB (Prisma-shaped API)
 export {

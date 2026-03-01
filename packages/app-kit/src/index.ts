@@ -107,5 +107,5 @@ export {
   useCanDo, useEntityPermissions, usePrivilegesApi,
 } from '@datagrok/app-core'
 export type {
-  DatagrokContext, DatagrokUser, ApiError, ClientAppDefinition, User,
+  DatagrokContext, DatagrokUser, ApiError, ClientAppDefinition, User, RowPermissions,
 } from '@datagrok/app-core'

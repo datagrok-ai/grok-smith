@@ -10,7 +10,7 @@ import {
 import type { PgColumn, PgTable, SelectedFields } from 'drizzle-orm/pg-core'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 
-import { canDo, isAdmin } from '../permissions/check.js'
+import { batchCheckPermissions, isAdmin } from '../permissions/check.js'
 import { PermissionDeniedError } from '../permissions/errors.js'
 import { visibleEntitiesSql, isAdminSql } from '../permissions/visibility.js'
 import type { UserContext } from '../permissions/types.js'
@@ -85,19 +85,77 @@ export function createEntityAccessor(
       return result
     }
 
-    // For each row, batch-check Edit/Delete/Share
+    // Batch-check all entities at once — single query instead of 3N
+    const entityIds = rows
+      .map((r) => r['entityId'] as string)
+      .filter(Boolean)
+
+    const grantsMap = await batchCheckPermissions(
+      db,
+      ctx.personalGroupId,
+      entityIds,
+      ['Edit', 'Delete', 'Share'],
+      config.entityTypeName,
+    )
+
     for (const row of rows) {
       const entityId = row['entityId'] as string
-      if (!entityId) continue
-      const [canEdit, canDelete, canShare] = await Promise.all([
-        canDo(db, ctx.personalGroupId, entityId, 'Edit', config.entityTypeName),
-        canDo(db, ctx.personalGroupId, entityId, 'Delete', config.entityTypeName),
-        canDo(db, ctx.personalGroupId, entityId, 'Share', config.entityTypeName),
-      ])
-      result.set(row['id'] as string, { canEdit, canDelete, canShare })
+      const grants = entityId ? grantsMap.get(entityId) : undefined
+      result.set(row['id'] as string, {
+        canEdit: grants?.has('Edit') ?? false,
+        canDelete: grants?.has('Delete') ?? false,
+        canShare: grants?.has('Share') ?? false,
+      })
     }
 
     return result
+  }
+
+  /**
+   * Asserts that the user has a specific permission on all given entities.
+   * Skips the check for admins. Throws PermissionDeniedError on first failure.
+   */
+  async function assertBulkPermission(
+    rows: { id: string; entityId: string }[],
+    permissionName: string,
+  ): Promise<void> {
+    const ctx = getUserContext()
+    const adminUser = await isAdmin(db, ctx.personalGroupId)
+    if (adminUser) return
+
+    const entityIds = rows.map((r) => r.entityId)
+    const grantsMap = await batchCheckPermissions(
+      db,
+      ctx.personalGroupId,
+      entityIds,
+      [permissionName],
+      config.entityTypeName,
+    )
+
+    for (const row of rows) {
+      if (!grantsMap.get(row.entityId)?.has(permissionName)) {
+        throw new PermissionDeniedError(row.entityId, permissionName, config.entityTypeName)
+      }
+    }
+  }
+
+  /**
+   * Creates an entity row (entities table + trigger) and returns the entity ID.
+   * Reused by create() and createMany().
+   */
+  async function createEntityRow(
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+    entityTypeId: string,
+    personalGroupId: string,
+  ): Promise<string> {
+    const entityResult = await tx.execute<{ id: string }>(sql`
+      INSERT INTO entities (id, entity_type_id, created_by_group_id)
+      VALUES (gen_random_uuid(), ${entityTypeId}::uuid, ${personalGroupId}::uuid)
+      RETURNING id
+    `)
+    const entityId = entityResult[0]?.id
+    if (!entityId) throw new Error('Failed to create entity row')
+    return entityId
   }
 
   // ── Read Operations ───────────────────────────────────────────────────────
@@ -105,7 +163,7 @@ export function createEntityAccessor(
   async function findMany(args?: FindManyArgs): Promise<Record<string, unknown>[]> {
     const whereCondition = compileWhere(args?.where, columnMap)
     const orderByClause = compileOrderBy(args?.orderBy, columnMap)
-    const selectCols = compileSelect(args?.select, columnMap)
+    const selectCols = compileSelect(args?.select, columnMap, args?.includePermissions)
 
     const conditions = [visibilityFilter()]
     if (whereCondition) conditions.push(whereCondition)
@@ -143,7 +201,7 @@ export function createEntityAccessor(
   }
 
   async function findUnique(args: FindUniqueArgs): Promise<Record<string, unknown> | null> {
-    const selectCols = compileSelect(args.select, columnMap)
+    const selectCols = compileSelect(args.select, columnMap, args.includePermissions)
     const selection = (selectCols ?? columns) as SelectedFields
     const rows = await db
       .select(selection)
@@ -193,7 +251,6 @@ export function createEntityAccessor(
     const ctx = getUserContext()
 
     return await db.transaction(async (tx) => {
-      // 1. Get entity type ID
       const etResult = await tx.execute<{ id: string }>(sql`
         SELECT id FROM entity_types WHERE name = ${config.entityTypeName}
       `)
@@ -202,18 +259,8 @@ export function createEntityAccessor(
         throw new Error(`Entity type '${config.entityTypeName}' not registered`)
       }
 
-      // 2. Insert entities row (trigger auto-grants permissions)
-      const entityResult = await tx.execute<{ id: string }>(sql`
-        INSERT INTO entities (id, entity_type_id, created_by_group_id)
-        VALUES (gen_random_uuid(), ${entityTypeId}::uuid, ${ctx.personalGroupId}::uuid)
-        RETURNING id
-      `)
-      const entityId = entityResult[0]?.id
-      if (!entityId) {
-        throw new Error('Failed to create entity row')
-      }
+      const entityId = await createEntityRow(tx, entityTypeId, ctx.personalGroupId)
 
-      // 3. Insert domain row with entity_id and created_by
       const insertData = {
         ...args.data,
         entityId,
@@ -233,7 +280,6 @@ export function createEntityAccessor(
     const ctx = getUserContext()
 
     return await db.transaction(async (tx) => {
-      // Get entity type ID
       const etResult = await tx.execute<{ id: string }>(sql`
         SELECT id FROM entity_types WHERE name = ${config.entityTypeName}
       `)
@@ -244,15 +290,7 @@ export function createEntityAccessor(
 
       const results: Record<string, unknown>[] = []
       for (const data of args.data) {
-        // Insert entities row
-        const entityResult = await tx.execute<{ id: string }>(sql`
-          INSERT INTO entities (id, entity_type_id, created_by_group_id)
-          VALUES (gen_random_uuid(), ${entityTypeId}::uuid, ${ctx.personalGroupId}::uuid)
-          RETURNING id
-        `)
-        const entityId = entityResult[0]?.id
-        if (!entityId) throw new Error('Failed to create entity row')
-
+        const entityId = await createEntityRow(tx, entityTypeId, ctx.personalGroupId)
         const insertData = { ...data, entityId, createdBy: ctx.userId }
         const [row] = await tx
           .insert(table)
@@ -266,8 +304,6 @@ export function createEntityAccessor(
   }
 
   async function update(args: UpdateArgs): Promise<Record<string, unknown>> {
-    const ctx = getUserContext()
-
     // Find the row to get its entityId
     const [existing] = await db
       .select({ id: idCol, entityId: entityIdCol })
@@ -278,14 +314,11 @@ export function createEntityAccessor(
       throw new Error(`Row not found: ${args.where.id}`)
     }
 
-    const allowed = await canDo(db, ctx.personalGroupId, existing.entityId, 'Edit', config.entityTypeName)
-    if (!allowed) {
-      throw new PermissionDeniedError(existing.entityId, 'Edit', config.entityTypeName)
-    }
+    await assertBulkPermission([existing], 'Edit')
 
     const [row] = await db
       .update(table)
-      .set(args.data as Record<string, unknown>)
+      .set(args.data)
       .where(eq(idCol, args.where.id))
       .returning() as Record<string, unknown>[]
 
@@ -293,12 +326,10 @@ export function createEntityAccessor(
   }
 
   async function updateMany(args: UpdateManyArgs): Promise<{ count: number }> {
-    const ctx = getUserContext()
     const whereCondition = compileWhere(args.where, columnMap)
     const conditions = [visibilityFilter()]
     if (whereCondition) conditions.push(whereCondition)
 
-    // Find all matching rows
     const rows = await db
       .select({ id: idCol, entityId: entityIdCol })
       .from(table)
@@ -306,29 +337,18 @@ export function createEntityAccessor(
 
     if (rows.length === 0) return { count: 0 }
 
-    // Check Edit permission on all
-    const adminUser = await isAdmin(db, ctx.personalGroupId)
-    if (!adminUser) {
-      for (const row of rows) {
-        const allowed = await canDo(db, ctx.personalGroupId, row.entityId, 'Edit', config.entityTypeName)
-        if (!allowed) {
-          throw new PermissionDeniedError(row.entityId, 'Edit', config.entityTypeName)
-        }
-      }
-    }
+    await assertBulkPermission(rows, 'Edit')
 
     const ids = rows.map((r) => r.id)
     await db
       .update(table)
-      .set(args.data as Record<string, unknown>)
+      .set(args.data)
       .where(inArray(idCol, ids))
 
     return { count: ids.length }
   }
 
   async function del(args: DeleteArgs): Promise<Record<string, unknown>> {
-    const ctx = getUserContext()
-
     // Find the row
     const [existing] = await db
       .select(columns as SelectedFields)
@@ -340,10 +360,7 @@ export function createEntityAccessor(
     }
 
     const entityId = existing['entityId'] as string
-    const allowed = await canDo(db, ctx.personalGroupId, entityId, 'Delete', config.entityTypeName)
-    if (!allowed) {
-      throw new PermissionDeniedError(entityId, 'Delete', config.entityTypeName)
-    }
+    await assertBulkPermission([{ id: existing['id'] as string, entityId }], 'Delete')
 
     // Delete the entities row — CASCADE removes permissions + domain row (via onDelete cascade)
     await db.execute(sql`DELETE FROM entities WHERE id = ${entityId}::uuid`)
@@ -352,7 +369,6 @@ export function createEntityAccessor(
   }
 
   async function deleteMany(args: DeleteManyArgs): Promise<{ count: number }> {
-    const ctx = getUserContext()
     const whereCondition = compileWhere(args.where, columnMap)
     const conditions = [visibilityFilter()]
     if (whereCondition) conditions.push(whereCondition)
@@ -364,16 +380,7 @@ export function createEntityAccessor(
 
     if (rows.length === 0) return { count: 0 }
 
-    // Check Delete permission on all
-    const adminUser = await isAdmin(db, ctx.personalGroupId)
-    if (!adminUser) {
-      for (const row of rows) {
-        const allowed = await canDo(db, ctx.personalGroupId, row.entityId, 'Delete', config.entityTypeName)
-        if (!allowed) {
-          throw new PermissionDeniedError(row.entityId, 'Delete', config.entityTypeName)
-        }
-      }
-    }
+    await assertBulkPermission(rows, 'Delete')
 
     // Delete entities rows — CASCADE handles the rest
     const entityIds = rows.map((r) => r.entityId)

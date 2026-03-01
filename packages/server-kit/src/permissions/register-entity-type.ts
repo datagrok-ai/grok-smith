@@ -1,7 +1,11 @@
 import { sql } from 'drizzle-orm'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 
-const STANDARD_PERMISSIONS = ['View', 'Edit', 'Delete', 'Share']
+/** Standard permission names granted to every entity type. */
+export const STANDARD_PERMISSIONS = ['View', 'Edit', 'Delete', 'Share'] as const
+
+/** Union type for standard permission name strings. */
+export type PermissionName = (typeof STANDARD_PERMISSIONS)[number]
 
 /**
  * Registers an entity type if it doesn't exist.

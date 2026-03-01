@@ -8,16 +8,39 @@ import { createEntityAccessor } from './entity-accessor.js'
 import type { EntityAccessor, EntityTableConfig } from './types.js'
 
 /**
- * Scans all tables in the Drizzle schema. For each table that has an
- * `entity_id` column, creates a Prisma-shaped accessor with permission-aware
- * CRUD methods.
- *
- * @param db - Drizzle database instance
- * @param schema - Drizzle schema object (import * as schema from '...')
- * @param entityTypeMap - Maps JS table variable names to entity type names
- *                        e.g. { sendStudies: 'Study', gritIssues: 'Issue' }
- * @param getUserContext - Returns the current user's context (userId + personalGroupId)
- * @returns Object with accessors like { sendStudies: { findMany, create, ... } }
+ * Scans a Drizzle schema for entity tables (those with an `entityId` column)
+ * and returns the static config for each. This is the expensive part that
+ * only needs to run once per schema.
+ */
+export function scanEntityTables(
+  schema: Record<string, unknown>,
+  entityTypeMap: Record<string, string>,
+): EntityTableConfig[] {
+  const configs: EntityTableConfig[] = []
+
+  for (const [name, tableOrOther] of Object.entries(schema)) {
+    if (!isTable(tableOrOther)) continue
+
+    const table = tableOrOther as PgTable
+    const columns = getTableColumns(table)
+    if (!('entityId' in columns)) continue
+
+    const entityTypeName = entityTypeMap[name]
+    if (!entityTypeName) continue
+
+    configs.push({
+      table: table as Table,
+      tableName: name,
+      entityTypeName,
+    })
+  }
+
+  return configs
+}
+
+/**
+ * Creates entity accessors from pre-scanned configs.
+ * Cheap to call per-request since configs are cached.
  */
 export function createEntityDb(
   db: PostgresJsDatabase<Record<string, unknown>>,
@@ -25,32 +48,11 @@ export function createEntityDb(
   entityTypeMap: Record<string, string>,
   getUserContext: () => UserContext,
 ): Record<string, EntityAccessor> {
+  const configs = scanEntityTables(schema, entityTypeMap)
   const entity: Record<string, EntityAccessor> = {}
 
-  for (const [name, tableOrOther] of Object.entries(schema)) {
-    // Skip non-table entries (relations, types, etc.)
-    if (!isTable(tableOrOther)) continue
-
-    const table = tableOrOther as PgTable
-    const columns = getTableColumns(table)
-
-    // Check if this table has an entityId column
-    if (!('entityId' in columns)) continue
-
-    // Look up the entity type name from the map
-    const entityTypeName = entityTypeMap[name]
-    if (!entityTypeName) continue
-
-    const columnList = Object.values(columns)
-    const config: EntityTableConfig = {
-      table: table as Table,
-      tableName: name,
-      accessorName: name,
-      columns: columnList,
-      entityTypeName,
-    }
-
-    entity[name] = createEntityAccessor(db, config, getUserContext)
+  for (const config of configs) {
+    entity[config.tableName] = createEntityAccessor(db, config, getUserContext)
   }
 
   return entity

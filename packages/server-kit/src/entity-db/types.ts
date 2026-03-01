@@ -1,4 +1,4 @@
-import type { Column, Table } from 'drizzle-orm'
+import type { Table } from 'drizzle-orm'
 
 // ── Prisma-shaped query interfaces ──────────────────────────────────────────
 
@@ -117,7 +117,5 @@ export interface EntityAccessor {
 export interface EntityTableConfig {
   table: Table
   tableName: string
-  accessorName: string
-  columns: Column[]
   entityTypeName: string
 }

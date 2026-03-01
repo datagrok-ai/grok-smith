@@ -25,17 +25,11 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@datagrok/app-kit'
-import type { BadgeVariant, DataGridColumn } from '@datagrok/app-kit'
+import type { BadgeVariant, DataGridColumn, RowPermissions } from '@datagrok/app-kit'
 
 import type { StudyStatus } from '../../../shared/constants'
 
 import { SendNav } from '../components/send-nav'
-
-interface RowPermissions {
-  canEdit: boolean
-  canDelete: boolean
-  canShare: boolean
-}
 
 interface StudyRow {
   id: string
