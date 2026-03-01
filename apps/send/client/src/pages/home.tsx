@@ -31,6 +31,12 @@ import type { StudyStatus } from '../../../shared/constants'
 
 import { SendNav } from '../components/send-nav'
 
+interface RowPermissions {
+  canEdit: boolean
+  canDelete: boolean
+  canShare: boolean
+}
+
 interface StudyRow {
   id: string
   studyId: string
@@ -42,6 +48,7 @@ interface StudyRow {
   testArticle: string | null
   subjectCount: number
   createdAt: string
+  _permissions?: RowPermissions
 }
 
 const STATUS_LABELS: Record<StudyStatus, string> = {
@@ -114,9 +121,11 @@ export default function HomePage() {
             <DropdownMenuItem onSelect={() => void navigate(`study/${data.id}`)}>
               Open
             </DropdownMenuItem>
-            <DropdownMenuItem destructive onSelect={() => setDeleteTarget(data)}>
-              Delete
-            </DropdownMenuItem>
+            {data._permissions?.canDelete && (
+              <DropdownMenuItem destructive onSelect={() => setDeleteTarget(data)}>
+                Delete
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),

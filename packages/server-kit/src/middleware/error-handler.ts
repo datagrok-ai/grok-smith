@@ -1,7 +1,21 @@
 import type { ErrorHandler } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 
+import { PermissionDeniedError } from '../permissions/errors.js'
+
 export const errorHandler: ErrorHandler = (err, c) => {
+  if (err instanceof PermissionDeniedError) {
+    return c.json(
+      {
+        error: 'permission_denied',
+        message: err.message,
+        entityId: err.entityId,
+        requiredPermission: err.requiredPermission,
+      },
+      403,
+    )
+  }
+
   if (err instanceof HTTPException) {
     return c.json(
       { error: err.message, details: undefined },

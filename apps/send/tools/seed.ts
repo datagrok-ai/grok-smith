@@ -12,7 +12,9 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { importStudyFromDirectory } from '../server/services/import-study'
-import { SYSTEM_USER_ID } from '@datagrok/core-schema'
+import { registerEntityType } from '@datagrok/server-kit'
+import { SYSTEM_USER_ID, SYSTEM_GROUP_ID } from '@datagrok/core-schema'
+import { db } from '../server/db/client'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = path.resolve(__dirname, '../data/PointCross')
@@ -22,7 +24,10 @@ async function main() {
   console.log(`Data directory: ${DATA_DIR}`)
   console.log()
 
-  const result = await importStudyFromDirectory(DATA_DIR, SYSTEM_USER_ID)
+  // Ensure Study entity type is registered before importing
+  await registerEntityType(db, 'Study')
+
+  const result = await importStudyFromDirectory(DATA_DIR, SYSTEM_USER_ID, SYSTEM_GROUP_ID)
 
   console.log()
   console.log(`Study: ${result.studyCode} — ${result.studyTitle}`)

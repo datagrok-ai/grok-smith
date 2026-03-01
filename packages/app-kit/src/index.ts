@@ -104,6 +104,7 @@ export {
   DatagrokProvider, useDatagrok, createDatagrokAdapter,
   createMockAdapter, mockUsers, ADMIN_USER_ID, SYSTEM_USER_ID,
   useApi, ApiRequestError, useCurrentUser, ApiBasePath, useApiBasePath,
+  useCanDo, useEntityPermissions, usePrivilegesApi,
 } from '@datagrok/app-core'
 export type {
   DatagrokContext, DatagrokUser, ApiError, ClientAppDefinition, User,

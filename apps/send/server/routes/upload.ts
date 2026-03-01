@@ -4,17 +4,16 @@ import path from 'path'
 
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
+import type { AppVariables } from '@datagrok/server-kit'
 import JSZip from 'jszip'
 
 import { importStudyFromDirectory } from '../services/import-study'
 
-export const uploadRoute = new Hono()
+export const uploadRoute = new Hono<{ Variables: AppVariables }>()
 
 uploadRoute.post('/studies/upload', async (c) => {
-  const userId = c.req.header('X-User-Id')
-  if (!userId) {
-    throw new HTTPException(401, { message: 'Missing X-User-Id header' })
-  }
+  const userId = c.var.userId
+  const personalGroupId = c.var.personalGroupId
 
   const body = await c.req.parseBody()
   const file = body['file']
@@ -70,7 +69,7 @@ uploadRoute.post('/studies/upload', async (c) => {
       })
     }
 
-    const result = await importStudyFromDirectory(dataDir, userId)
+    const result = await importStudyFromDirectory(dataDir, userId, personalGroupId)
 
     return c.json(result, 201)
   } finally {

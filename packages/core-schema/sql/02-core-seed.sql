@@ -128,3 +128,20 @@ INSERT INTO entities (id, entity_type_id, handle, friendly_name, name, namespace
 SELECT '878c42b0-9a50-11e6-c537-6bf8e9ab0299', '34d97910-e870-11e6-d91b-eb5db4743824',
        'Admin', 'Admin', 'Admin', ''
 WHERE NOT EXISTS (SELECT 1 FROM entities WHERE id = '878c42b0-9a50-11e6-c537-6bf8e9ab0299');
+
+-- ── Standard permissions (View/Edit/Delete/Share for each entity type) ───────
+
+DO $$
+DECLARE
+  et RECORD;
+  perms TEXT[] := ARRAY['View', 'Edit', 'Delete', 'Share'];
+  p TEXT;
+BEGIN
+  FOR et IN SELECT id FROM entity_types LOOP
+    FOREACH p IN ARRAY perms LOOP
+      INSERT INTO entity_types_permissions (id, name, entity_type_id)
+      VALUES (gen_random_uuid(), p, et.id)
+      ON CONFLICT (name, entity_type_id) DO NOTHING;
+    END LOOP;
+  END LOOP;
+END $$;

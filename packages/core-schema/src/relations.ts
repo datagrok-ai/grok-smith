@@ -16,6 +16,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.entities.entityTypeId,
       to: r.entityTypes.id,
     }),
+    createdByGroup: r.one.groups({
+      from: r.entities.createdByGroupId,
+      to: r.groups.id,
+      alias: 'createdByGroup',
+    }),
     projectRelations: r.many.projectRelations(),
   },
 

@@ -1,10 +1,9 @@
 import { Hono } from 'hono'
-import { eq, sql, desc, and } from 'drizzle-orm'
+import { eq, sql, and, inArray } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
+import type { AppVariables } from '@datagrok/server-kit'
 
-import { db } from '../db/client'
 import {
-  studies,
   subjects,
   findings,
   exposures,
@@ -16,41 +15,57 @@ import {
   trialSets,
 } from '../../shared/schema'
 import { FINDINGS_DOMAINS, DOMAIN_LABELS } from '../../shared/constants'
+import { getSecureDb } from '../db/secure'
 
-export const studiesRoute = new Hono()
+export const studiesRoute = new Hono<{ Variables: AppVariables }>()
 
 // ---------------------------------------------------------------------------
-// GET /studies — list all studies with subject counts
+// GET /studies — list studies visible to the current user, with subject counts
 // ---------------------------------------------------------------------------
 
 studiesRoute.get('/studies', async (c) => {
-  const subjectCountSq = db
+  const sdb = getSecureDb(c)
+
+  // Permission-filtered study list
+  const rows = await sdb.entity.studies.findMany({
+    select: {
+      id: true,
+      studyId: true,
+      title: true,
+      status: true,
+      species: true,
+      strain: true,
+      route: true,
+      testArticle: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    includePermissions: true,
+  })
+
+  if (rows.length === 0) {
+    return c.json([])
+  }
+
+  // Fetch subject counts for visible studies
+  const studyIds = rows.map((r) => r['id'] as string)
+  const subjectCounts = await sdb
     .select({
       studyId: subjects.studyId,
       count: sql<number>`count(*)::int`.as('subject_count'),
     })
     .from(subjects)
+    .where(inArray(subjects.studyId, studyIds))
     .groupBy(subjects.studyId)
-    .as('sc')
 
-  const rows = await db
-    .select({
-      id: studies.id,
-      studyId: studies.studyId,
-      title: studies.title,
-      status: studies.status,
-      species: studies.species,
-      strain: studies.strain,
-      route: studies.route,
-      testArticle: studies.testArticle,
-      subjectCount: sql<number>`coalesce(${subjectCountSq.count}, 0)`.as('subject_count'),
-      createdAt: studies.createdAt,
-    })
-    .from(studies)
-    .leftJoin(subjectCountSq, eq(studies.id, subjectCountSq.studyId))
-    .orderBy(desc(studies.createdAt))
+  const countMap = new Map(subjectCounts.map((sc) => [sc.studyId, sc.count]))
 
-  return c.json(rows)
+  const result = rows.map((r) => ({
+    ...r,
+    subjectCount: countMap.get(r['id'] as string) ?? 0,
+  }))
+
+  return c.json(result)
 })
 
 // ---------------------------------------------------------------------------
@@ -59,15 +74,20 @@ studiesRoute.get('/studies', async (c) => {
 
 studiesRoute.get('/studies/:id', async (c) => {
   const studyUuid = c.req.param('id')
+  const sdb = getSecureDb(c)
 
-  const [study] = await db.select().from(studies).where(eq(studies.id, studyUuid))
+  // Permission-filtered lookup
+  const study = await sdb.entity.studies.findUnique({
+    where: { id: studyUuid },
+    includePermissions: true,
+  })
 
   if (!study) {
     throw new HTTPException(404, { message: 'Study not found' })
   }
 
-  // Findings domain counts (single GROUP BY query)
-  const findingsCounts = await db
+  // Domain counts — these are detail tables, queried with raw Drizzle
+  const findingsCounts = await sdb
     .select({
       domain: findings.domain,
       count: sql<number>`count(*)::int`,
@@ -76,16 +96,15 @@ studiesRoute.get('/studies/:id', async (c) => {
     .where(eq(findings.studyId, studyUuid))
     .groupBy(findings.domain)
 
-  // Special-purpose + trial design domain counts (parallel)
   const [dmRes, exRes, dsRes, seRes, coRes, taRes, tsRes, txRes] = await Promise.all([
-    db.select({ count: sql<number>`count(*)::int` }).from(subjects).where(eq(subjects.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(exposures).where(eq(exposures.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(dispositions).where(eq(dispositions.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(subjectElements).where(eq(subjectElements.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(comments).where(eq(comments.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(trialArms).where(eq(trialArms.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(trialSummaryParameters).where(eq(trialSummaryParameters.studyId, studyUuid)),
-    db.select({ count: sql<number>`count(*)::int` }).from(trialSets).where(eq(trialSets.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(subjects).where(eq(subjects.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(exposures).where(eq(exposures.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(dispositions).where(eq(dispositions.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(subjectElements).where(eq(subjectElements.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(comments).where(eq(comments.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(trialArms).where(eq(trialArms.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(trialSummaryParameters).where(eq(trialSummaryParameters.studyId, studyUuid)),
+    sdb.select({ count: sql<number>`count(*)::int` }).from(trialSets).where(eq(trialSets.studyId, studyUuid)),
   ])
 
   const domains: Array<{ domain: string; label: string; count: number }> = []
@@ -118,19 +137,15 @@ studiesRoute.get('/studies/:id', async (c) => {
 })
 
 // ---------------------------------------------------------------------------
-// DELETE /studies/:id — delete a study and all associated data (cascades)
+// DELETE /studies/:id — delete a study (requires Delete permission)
 // ---------------------------------------------------------------------------
 
 studiesRoute.delete('/studies/:id', async (c) => {
   const studyUuid = c.req.param('id')
+  const sdb = getSecureDb(c)
 
-  const [study] = await db.select({ id: studies.id }).from(studies).where(eq(studies.id, studyUuid))
-
-  if (!study) {
-    throw new HTTPException(404, { message: 'Study not found' })
-  }
-
-  await db.delete(studies).where(eq(studies.id, studyUuid))
+  // entity-db checks Delete permission and cascades via entities row
+  await sdb.entity.studies.delete({ where: { id: studyUuid } })
 
   return c.json({ success: true })
 })
@@ -144,9 +159,16 @@ const FINDINGS_SET = new Set<string>(FINDINGS_DOMAINS)
 studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
   const studyUuid = c.req.param('id')
   const domainCode = c.req.param('domain').toUpperCase()
+  const sdb = getSecureDb(c)
+
+  // Verify the user can view this study
+  const study = await sdb.entity.studies.findUnique({ where: { id: studyUuid } })
+  if (!study) {
+    throw new HTTPException(404, { message: 'Study not found' })
+  }
 
   if (FINDINGS_SET.has(domainCode)) {
-    const rows = await db
+    const rows = await sdb
       .select({
         usubjid: subjects.usubjid,
         seq: findings.seq,
@@ -181,7 +203,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
 
   switch (domainCode) {
     case 'DM': {
-      const rows = await db
+      const rows = await sdb
         .select({
           usubjid: subjects.usubjid,
           subjid: subjects.subjid,
@@ -201,7 +223,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'EX': {
-      const rows = await db
+      const rows = await sdb
         .select({
           usubjid: subjects.usubjid,
           seq: exposures.seq,
@@ -225,7 +247,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'DS': {
-      const rows = await db
+      const rows = await sdb
         .select({
           usubjid: subjects.usubjid,
           seq: dispositions.seq,
@@ -245,7 +267,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'SE': {
-      const rows = await db
+      const rows = await sdb
         .select({
           usubjid: subjects.usubjid,
           seq: subjectElements.seq,
@@ -264,7 +286,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'CO': {
-      const rows = await db
+      const rows = await sdb
         .select({
           usubjid: subjects.usubjid,
           relatedDomain: comments.relatedDomain,
@@ -283,7 +305,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'TA': {
-      const rows = await db
+      const rows = await sdb
         .select({
           armCode: trialArms.armCode,
           arm: trialArms.arm,
@@ -301,7 +323,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'TS': {
-      const rows = await db
+      const rows = await sdb
         .select({
           seq: trialSummaryParameters.seq,
           groupId: trialSummaryParameters.groupId,
@@ -317,7 +339,7 @@ studiesRoute.get('/studies/:id/domains/:domain', async (c) => {
     }
 
     case 'TX': {
-      const rows = await db
+      const rows = await sdb
         .select({
           setCode: trialSets.setCode,
           setDescription: trialSets.setDescription,

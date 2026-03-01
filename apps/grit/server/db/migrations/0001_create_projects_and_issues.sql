@@ -6,7 +6,7 @@ CREATE SCHEMA IF NOT EXISTS grit;
 -- ---------------------------------------------------------------------------
 CREATE TABLE grit.projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  entity_id UUID REFERENCES public.entities(id),
+  entity_id UUID REFERENCES public.entities(id) ON DELETE CASCADE,
   name VARCHAR(200) NOT NULL,
   key VARCHAR(10) NOT NULL UNIQUE,
   description TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE grit.projects (
 -- ---------------------------------------------------------------------------
 CREATE TABLE grit.issues (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  entity_id UUID REFERENCES public.entities(id),
+  entity_id UUID REFERENCES public.entities(id) ON DELETE CASCADE,
   project_id UUID NOT NULL REFERENCES grit.projects(id) ON DELETE CASCADE,
   name VARCHAR(500) NOT NULL,
   description TEXT,

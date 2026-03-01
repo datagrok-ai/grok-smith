@@ -5,8 +5,10 @@ import { logger } from 'hono/logger'
 import type { AppConfig, AppVariables } from './types.js'
 import { requestId } from './middleware/request-id.js'
 import { auth } from './middleware/auth.js'
+import { userContext } from './middleware/user-context.js'
 import { errorHandler } from './middleware/error-handler.js'
 import { healthRoutes } from './routes/health.js'
+import { privilegeRoutes } from './routes/privileges.js'
 
 export function createApp(config: AppConfig) {
   const app = new Hono<{ Variables: AppVariables }>()
@@ -26,6 +28,12 @@ export function createApp(config: AppConfig) {
   )
   app.use('*', requestId)
   app.use('*', auth)
+
+  // When db is provided, mount user context middleware and privilege routes
+  if (config.db) {
+    app.use('*', userContext(config.db))
+    app.route('/', privilegeRoutes(config.db))
+  }
 
   // Standard routes
   app.route('/', healthRoutes())

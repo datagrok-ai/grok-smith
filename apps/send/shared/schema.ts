@@ -33,7 +33,7 @@ export const studyStatusSchema = z.enum(STUDY_STATUS)
 
 export const studies = sendSchema.table('studies', {
   id: uuid('id').primaryKey().defaultRandom(),
-  entityId: uuid('entity_id').references(() => entities.id),
+  entityId: uuid('entity_id').references(() => entities.id, { onDelete: 'cascade' }),
   studyId: varchar('study_id', { length: 100 }).notNull().unique(),
   title: varchar('title', { length: 500 }).notNull(),
   description: text('description'),

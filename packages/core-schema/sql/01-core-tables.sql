@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS entity_types (
     id UUID NOT NULL PRIMARY KEY,
-    name VARCHAR(512) NOT NULL,
+    name VARCHAR(512) NOT NULL UNIQUE,
     is_package_entity BOOLEAN,
     friendly_name VARCHAR(1024)
 );
@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS entity_types (
 CREATE TABLE IF NOT EXISTS entities (
   id UUID NOT NULL PRIMARY KEY,
   entity_type_id UUID REFERENCES entity_types(id),
+  created_by_group_id UUID,  -- FK added after groups table exists
   handle VARCHAR(512),
   tokens VARCHAR(64)[],
   friendly_name VARCHAR(1024),
@@ -33,6 +34,7 @@ CREATE INDEX IF NOT EXISTS entities_type_lower_handle_idx ON entities(entity_typ
 CREATE INDEX IF NOT EXISTS entities_type_handle_idx ON entities(entity_type_id, handle);
 CREATE INDEX IF NOT EXISTS entities_lower_handle_idx ON entities(lower(handle));
 CREATE INDEX IF NOT EXISTS entities_bind_id_idx ON entities(bind_id);
+CREATE INDEX IF NOT EXISTS entities_created_by_group_idx ON entities(created_by_group_id);
 
 -- ── groups ──────────────────────────────────────────────────────────────────────
 
@@ -127,16 +129,18 @@ CREATE TABLE IF NOT EXISTS entity_types_permissions (
   should_check_at_save BOOLEAN,
   should_check_at_delete BOOLEAN,
   should_check_at_share BOOLEAN,
-  project_permission_id UUID REFERENCES entity_types_permissions(id)
+  project_permission_id UUID REFERENCES entity_types_permissions(id),
+  UNIQUE (name, entity_type_id)
 );
 
 -- ── permissions ─────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS permissions (
   id UUID NOT NULL PRIMARY KEY,
-  entity_id UUID,
+  entity_id UUID REFERENCES entities(id) ON DELETE CASCADE,
   user_group_id UUID REFERENCES groups(id),
-  permission_id UUID REFERENCES entity_types_permissions(id)
+  permission_id UUID REFERENCES entity_types_permissions(id),
+  UNIQUE (entity_id, user_group_id, permission_id)
 );
 
 CREATE INDEX IF NOT EXISTS permissions_i1 ON permissions(permission_id, user_group_id, entity_id);
@@ -180,6 +184,20 @@ BEGIN
   ) THEN
     ALTER TABLE users ADD CONSTRAINT users_project_id_fkey
       FOREIGN KEY (project_id) REFERENCES projects(id);
+  END IF;
+END
+$$;
+
+-- Deferred FK: entities.created_by_group_id → groups.id (groups defined after entities)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'entities_created_by_group_id_fkey'
+      AND table_name = 'entities'
+  ) THEN
+    ALTER TABLE entities ADD CONSTRAINT entities_created_by_group_id_fkey
+      FOREIGN KEY (created_by_group_id) REFERENCES groups(id);
   END IF;
 END
 $$;
@@ -253,3 +271,34 @@ CREATE TABLE IF NOT EXISTS entity_types_schemas (
     schema_id UUID NOT NULL,
     UNIQUE(entity_type_id, schema_id)
 );
+
+-- ── Trigger: auto-grant permissions on entity creation ──────────────────────
+
+CREATE OR REPLACE FUNCTION on_entity_created()
+RETURNS TRIGGER AS $$
+DECLARE
+  perm RECORD;
+BEGIN
+  -- Only fire when created_by_group_id is set (app-managed entities)
+  IF NEW.created_by_group_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Grant all permissions for this entity type to the creator's group
+  FOR perm IN
+    SELECT id FROM entity_types_permissions
+    WHERE entity_type_id = NEW.entity_type_id
+  LOOP
+    INSERT INTO permissions (id, entity_id, user_group_id, permission_id)
+    VALUES (gen_random_uuid(), NEW.id, NEW.created_by_group_id, perm.id)
+    ON CONFLICT (entity_id, user_group_id, permission_id) DO NOTHING;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_entity_created ON entities;
+CREATE TRIGGER trg_entity_created
+  AFTER INSERT ON entities
+  FOR EACH ROW EXECUTE FUNCTION on_entity_created();

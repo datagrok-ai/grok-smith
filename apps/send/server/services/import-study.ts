@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 // xport-js is CJS with nested default exports: module.default.default = Library class
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/consistent-type-imports
 import xportModule from 'xport-js'
@@ -128,6 +128,7 @@ const NUMERIC_FIELDS = new Set(['standardResultNumeric', 'studyDay', 'endDay'])
 async function importStudy(
   dataDir: string,
   userId: string,
+  personalGroupId: string,
 ): Promise<{ studyDbId: string; studyCode: string; studyTitle: string }> {
   const { rows } = await readXpt(dataDir, 'ts.xpt')
 
@@ -139,39 +140,61 @@ async function importStudy(
   const studyId = params['STUDYID'] || rows[0] ? str(rows[0], 'STUDYID') : 'UNKNOWN'
   const title = params['SSTDTL'] || params['TITLE'] || studyId
 
-  const [inserted] = await db
-    .insert(studies)
-    .values({
-      studyId,
-      title,
-      status: 'completed',
-      sponsor: params['SPONSOR'] || null,
-      species: params['SPECIES'] || null,
-      strain: params['STRAIN'] || null,
-      route: params['ROUTE'] || null,
-      testArticle: params['TRT'] || null,
-      glpStatus: params['PLTEFG'] || null,
-      sendVersion: params['SNDSVER'] || null,
-      createdBy: userId,
-    })
-    .onConflictDoNothing()
-    .returning({ id: studies.id })
+  // Check if study already exists (re-upload case)
+  const [existing] = await db
+    .select({ id: studies.id })
+    .from(studies)
+    .where(eq(studies.studyId, studyId))
 
-  let studyDbId: string
-  if (!inserted) {
-    const [existing] = await db
-      .select({ id: studies.id })
-      .from(studies)
-      .where(eq(studies.studyId, studyId))
-    studyDbId = existing.id
-  } else {
-    studyDbId = inserted.id
+  if (existing) {
+    return { studyDbId: existing.id, studyCode: studyId, studyTitle: title }
+  }
 
+  // New study — create entities row + study row in a transaction
+  const studyDbId = await db.transaction(async (tx) => {
+    // Look up the 'Study' entity type
+    const etResult = await tx.execute<{ id: string }>(sql`
+      SELECT id FROM entity_types WHERE name = 'Study'
+    `)
+    const entityTypeId = etResult[0]?.id
+    if (!entityTypeId) {
+      throw new Error("Entity type 'Study' not registered. Call registerEntityType(db, 'Study') at startup.")
+    }
+
+    // Create entities row (trigger auto-grants permissions to creator)
+    const entityResult = await tx.execute<{ id: string }>(sql`
+      INSERT INTO entities (id, entity_type_id, created_by_group_id)
+      VALUES (gen_random_uuid(), ${entityTypeId}::uuid, ${personalGroupId}::uuid)
+      RETURNING id
+    `)
+    const entityId = entityResult[0]?.id
+    if (!entityId) throw new Error('Failed to create entity row')
+
+    // Insert study with entity_id
+    const [study] = await tx
+      .insert(studies)
+      .values({
+        studyId,
+        title,
+        entityId,
+        status: 'completed',
+        sponsor: params['SPONSOR'] || null,
+        species: params['SPECIES'] || null,
+        strain: params['STRAIN'] || null,
+        route: params['ROUTE'] || null,
+        testArticle: params['TRT'] || null,
+        glpStatus: params['PLTEFG'] || null,
+        sendVersion: params['SNDSVER'] || null,
+        createdBy: userId,
+      })
+      .returning({ id: studies.id })
+
+    // Import TS parameters
     for (const row of rows) {
-      await db
+      await tx
         .insert(trialSummaryParameters)
         .values({
-          studyId: studyDbId,
+          studyId: study.id,
           seq: intOrNull(row, 'TSSEQ') ?? 1,
           groupId: str(row, 'TSGRPID') || null,
           parameterCode: str(row, 'TSPARMCD'),
@@ -181,7 +204,9 @@ async function importStudy(
         })
         .onConflictDoNothing()
     }
-  }
+
+    return study.id
+  })
 
   return { studyDbId, studyCode: studyId, studyTitle: title }
 }
@@ -631,9 +656,10 @@ async function importRelatedRecords(
 export async function importStudyFromDirectory(
   dataDir: string,
   userId: string,
+  personalGroupId: string,
 ): Promise<ImportResult> {
-  // 1. Study + trial summary
-  const { studyDbId, studyCode, studyTitle } = await importStudy(dataDir, userId)
+  // 1. Study + trial summary (creates entities row for permissions)
+  const { studyDbId, studyCode, studyTitle } = await importStudy(dataDir, userId, personalGroupId)
 
   // 2. Trial Arms
   await importTrialArms(dataDir, studyDbId, userId)

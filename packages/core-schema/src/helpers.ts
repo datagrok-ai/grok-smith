@@ -23,7 +23,7 @@ import { entities, users } from './schema.js'
 export function auditColumns() {
   return {
     id: uuid('id').primaryKey().defaultRandom(),
-    entityId: uuid('entity_id').references(() => entities.id),
+    entityId: uuid('entity_id').references(() => entities.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()

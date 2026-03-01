@@ -8,6 +8,9 @@
 - Foreign keys: `{referenced_table_singular}_id` (`project_id`, `user_id`)
 - Never abbreviate (`organizations` not `orgs`)
 
+## Cross-cutting concepts
+- [Entity permissions](DB-ENTITY-PERMISSIONS.md): groups, roles, privileges, entities, entity types
+
 ## Required Columns
 
 Every table gets:

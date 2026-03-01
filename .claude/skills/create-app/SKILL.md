@@ -18,6 +18,7 @@ Ask the user to describe the application in a few sentences:
 - What does this app do?
 - Who are the primary users?
 - What are the main entities (the "things" users create and manage)?
+- Which entities should be managed by the platform? For the managed entities - what should be the privileges and roles?
 
 Wait for the user's response before proceeding.
 

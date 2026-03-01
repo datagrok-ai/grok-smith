@@ -40,6 +40,7 @@ export const entities = pgTable(
     namespace: varchar('namespace', { length: 1024 }).default(''),
     isDeleted: boolean('is_deleted').default(false),
     bindId: uuid('bind_id'),
+    createdByGroupId: uuid('created_by_group_id').references(() => groups.id),
   },
   (t) => [
     index('entities_handle_idx').on(t.handle),

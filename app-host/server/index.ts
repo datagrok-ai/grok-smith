@@ -1,5 +1,5 @@
 import { serve } from '@hono/node-server'
-import { createApp, createDb, authRoutes } from '@datagrok/server-kit'
+import { createApp, createDb, authRoutes, registerEntityType } from '@datagrok/server-kit'
 
 import { sendServerApp } from '@datagrok/send/server/app-definition'
 import { gritServerApp } from '@datagrok/grit/server/app-definition'
@@ -9,8 +9,12 @@ const apps = [sendServerApp, gritServerApp, dbxServerApp]
 
 const db = createDb({ schema: {} })
 
+// Register entity types used by apps (idempotent — safe on every startup)
+await registerEntityType(db, 'Study')
+
 const app = createApp({
   name: 'MiniGrok',
+  db,
   corsOrigin: 'http://localhost:5174',
   configure: (host) => {
     host.route('/', authRoutes(db))
