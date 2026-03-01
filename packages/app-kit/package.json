@@ -11,6 +11,9 @@
     "./theme/tokens.css": "./src/theme/tokens.css",
     "./theme/ag-grid-theme.css": "./src/theme/ag-grid-theme.css"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "peerDependencies": {
     "react": "^18",
     "react-dom": "^18",

@@ -1,8 +1,9 @@
 # Datagrok App Factory
 
 This is a harness for developing Datagrok lightweight applications, along with apps. The idea is to make
-developing apps by AI a straightforward process. All apps share the same logical structure, same database approaches,
-and they share a core database schema with users, groups, security, etc.
+developing apps by AI a quick, straightforward, and reproducible process. All apps share the same logical structure, same UI, same component library, design philosophy, testing concepts, same database approaches, and they share a core database schema with users, groups, security, etc.
+
+The app factory is designed for development velocity.
 
 ## Before starting any task
 1. Read /docs/CODING.md and /docs/DATABASE.md and /docs/DESIGN.md (they are short)
@@ -17,6 +18,7 @@ packages/
   app-kit/           # Client UI components, theme (re-exports app-core for convenience)
   core-schema/       # Drizzle tables + types for core Datagrok entities, auditColumns() helper
   server-kit/        # Server harness: createApp(), createDb(), standard middleware & routes
+  test-utils/        # Shared test helpers: createTestHeaders(), renderWithProviders(), DB fixtures
 apps/
   send/              # SEND nonclinical study app
   grit/              # GRIT issue tracker app
@@ -53,7 +55,7 @@ Each app exports a **client definition** (`ClientAppDefinition`) and a **server 
 - Use `createDb()` from `@datagrok/server-kit` for DB connections
 - Use `auditColumns()` from `@datagrok/core-schema` on entity tables (not on detail/child tables)
 - Define types in `/shared/schema.ts` using Drizzle, derive Zod and TS types from it
-- Run `npm run typecheck` and `npm run lint` before considering a task done
+- Run `npm test`, `npm run typecheck`, and `npm run lint` before considering a task done
 - Keep shared/ as the single source of truth for types
 - Use relative URLs in app page links (e.g. `study/123`, `..`) so apps work in both standalone and app-host modes
 

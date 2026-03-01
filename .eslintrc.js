@@ -17,5 +17,5 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
     '@typescript-eslint/no-import-type-side-effects': 'error',
   },
-  ignorePatterns: ['node_modules', 'dist', 'coverage', '*.js'],
+  ignorePatterns: ['node_modules', 'dist', 'coverage', '*.js', 'vitest.config.ts'],
 }

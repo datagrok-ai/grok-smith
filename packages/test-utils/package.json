@@ -1,0 +1,27 @@
+{
+  "name": "@datagrok/test-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./react": "./src/react.ts",
+    "./setup-dom": "./src/setup-dom.ts",
+    "./db": "./src/db.ts",
+    "./permission-fixtures": "./src/permission-fixtures.ts"
+  },
+  "dependencies": {
+    "@datagrok/core-schema": "*",
+    "@testing-library/react": "^16",
+    "@testing-library/jest-dom": "^6",
+    "jsdom": "^26"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=1.0.0-beta",
+    "postgres": ">=3",
+    "vitest": "^3"
+  }
+}

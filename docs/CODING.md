@@ -34,7 +34,15 @@
 - When replacing a component/module, remove the old one in the same PR. No `@deprecated` annotations, no re-exports for backwards compatibility.
 
 ## Testing
-- Use Vitest
-- Test files co-located: `foo.ts` → `foo.test.ts`
-- Server: test services (business logic), not routes
+- **Runner**: Vitest v3, configured via `vitest.config.ts` in root + each package/app
+- **Test files**: co-located — `foo.ts` → `foo.test.ts`
+- **Run**: `npm test` (root runs all), or `npm test --workspace=packages/server-kit` (single package)
+- **Shared helpers**: `@datagrok/test-utils` provides `createTestHeaders()`, `renderWithProviders()`, `createTestDb()`, `withTestTransaction()`, and permission fixtures
+- **Server tests**: use Hono `app.request()` — no HTTP server needed. Example:
+  ```ts
+  const res = await app.request('/api/test', { headers: createTestHeaders() })
+  ```
+- **Client tests**: use `renderWithProviders()` from test-utils — wraps component in `DatagrokProvider` with mock context. Environment is `jsdom` (set per-package in vitest config, or per-file with `// @vitest-environment jsdom`)
+- **DB tests**: use `createTestDb()` and `withTestTransaction()` for isolated, auto-rolled-back database tests
+- Server: test middleware and services, not boilerplate
 - Client: test complex hooks and utils, not simple components

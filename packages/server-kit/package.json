@@ -8,6 +8,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "peerDependencies": {
     "drizzle-orm": ">=1.0.0-beta",
     "hono": ">=4",

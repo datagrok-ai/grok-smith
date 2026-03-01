@@ -5,6 +5,7 @@
     { "path": "packages/app-kit" },
     { "path": "packages/core-schema" },
     { "path": "packages/server-kit" },
+    { "path": "packages/test-utils" },
     { "path": "apps/send" },
     { "path": "apps/grit" },
     { "path": "app-host" }
