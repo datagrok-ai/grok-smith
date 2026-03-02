@@ -4,10 +4,11 @@ import { Shell, ApiBasePath } from '@datagrok/app-kit'
 import { sendApp } from '@datagrok/send/client/app-definition'
 import { gritApp } from '@datagrok/grit/client/app-definition'
 import { dbxApp } from '@datagrok/dbx/client/app-definition'
+import { showcaseApp } from '@datagrok/showcase/client/app-definition'
 
 import { AppBar } from './components/app-bar'
 
-const apps = [sendApp, gritApp, dbxApp]
+const apps = [sendApp, gritApp, dbxApp, showcaseApp]
 
 export function App() {
   return (

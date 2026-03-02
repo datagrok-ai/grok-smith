@@ -4,7 +4,7 @@ export type {
   ShellProps,
   ViewProps,
   ViewSlots,
-  BreadcrumbItem,
+  BreadcrumbItem as ShellBreadcrumbItem,
   ShellPanelState,
   ShellActions,
   ShellContextValue,
@@ -24,6 +24,22 @@ export type { AlertProps } from './ui/alert'
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card'
 export { EmptyState } from './ui/empty-state'
 export type { EmptyStateProps } from './ui/empty-state'
+
+// Accordion
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion'
+
+// Breadcrumb
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from './ui/breadcrumb'
+
+// ButtonGroup
+export { ButtonGroup } from './ui/button-group'
 
 // Interactive components
 export {
@@ -60,6 +76,13 @@ export {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from './ui/dropdown-menu'
+export {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from './ui/context-menu'
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs'
 export { DataGrid } from './ui/data-grid'
 export type { DataGridProps, DataGridColumn } from './ui/data-grid'

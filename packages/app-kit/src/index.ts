@@ -7,6 +7,20 @@ export {
   Shell,
   View,
   useShell,
+  // Accordion
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+  // Breadcrumb
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+  // ButtonGroup
+  ButtonGroup,
   // Display
   Button,
   Badge,
@@ -45,6 +59,12 @@ export {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
+  // ContextMenu
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
   // DropdownMenu
   DropdownMenu,
   DropdownMenuTrigger,
@@ -78,7 +98,7 @@ export type {
   ShellProps,
   ViewProps,
   ViewSlots,
-  BreadcrumbItem,
+  ShellBreadcrumbItem,
   ShellPanelState,
   ShellActions,
   ShellContextValue,

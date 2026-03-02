@@ -1,25 +1,25 @@
 {
-  "name": "@datagrok/app-host",
+  "name": "@datagrok/showcase",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./client/app-definition": "./client/src/app-definition.ts",
+    "./server/app-definition": "./server/app-definition.ts"
+  },
   "scripts": {
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "vite --config client/vite.config.ts",
     "dev:server": "tsx watch server/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@datagrok/app-core": "*",
     "@datagrok/app-kit": "*",
     "@datagrok/core-schema": "*",
     "@datagrok/server-kit": "*",
-    "@datagrok/send": "*",
-    "@datagrok/grit": "*",
-    "@datagrok/dbx": "*",
-    "@datagrok/showcase": "*",
     "@hono/node-server": "^1.11",
-    "drizzle-orm": "1.0.0-beta.15-859cf75",
     "hono": "^4.4",
     "postgres": "^3.4",
     "react": "^18.3",
